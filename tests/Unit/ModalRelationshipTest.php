@@ -80,8 +80,14 @@ test('could register a promotion', function () {
 });
 
 test('could subscribe a tenant to get a promotion', function () {
-    // Create a tenant
-    $tenant = Tenant::factory()->create();
+    // Create a new customer using the factory
+    $customer = Customer::factory()->create();
+    // Create a tenant for customer
+    $tenant = $customer->tenants()->create([
+        'code' => 'TENANT-' . strtoupper(uniqid()),
+        'name' => $customer->user->name . "'s Tenant",
+        'domain' => strtolower(uniqid()) . '.example.com',
+    ]);
 
     // Create a product
     $product = Product::factory()->create();

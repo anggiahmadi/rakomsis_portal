@@ -27,6 +27,7 @@ class SubscriptionFactory extends Factory
             'length_of_term' => $this->faker->numberBetween(1, 12),
             'start_date' => $this->faker->date(),
             'end_date' => $this->faker->date(),
+            'tax_percentage' => $this->faker->randomFloat(2, 0, 20),
             'price' => $this->faker->randomFloat(2, 10, 1000),
             'tax' => $this->faker->randomFloat(2, 0, 200),
             'discount_type' => $this->faker->randomElement(['percentage', 'fixed']),

@@ -54,25 +54,4 @@ class Agent extends Model
     {
         return $this->hasMany(Withdrawal::class);
     }
-
-    public function additionalBalance(float $amount)
-    {
-        $this->balance += $amount;
-
-        $this->save();
-    }
-
-    public function additionalPendingWithdrawn(float $amount)
-    {
-        $this->pending_withdrawal += $amount;
-
-        $this->save();
-    }
-
-    public function additionalWithdrawn(float $amount)
-    {
-        $this->withdrawn += $amount;
-
-        $this->save();
-    }
 }

@@ -19,18 +19,28 @@ class Tenant extends Model
         'business_type',
     ];
 
-    public function customers()
-    {
-        return $this->belongsToMany(Customer::class, 'customer_tenant')
-                    ->withPivot('role')
-                    ->withTimestamps();
-    }
-
     public function isOwner(Customer $customer)
     {
         return $this->customers()
                     ->where('customer_id', $customer->id)
                     ->wherePivot('role', 'owner')
                     ->exists();
+    }
+
+    public function customers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Customer::class, 'customer_tenant')
+                    ->withPivot('role')
+                    ->withTimestamps();
+    }
+
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function activeSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscription::class)->where('status', 'active');
     }
 }
