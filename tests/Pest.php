@@ -14,8 +14,8 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature');
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +29,9 @@ pest()->extend(TestCase::class)
 */
 
 expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+    /** @var \Pest\Expectation $this */
+    $this->toBe(1);
+    return $this;
 });
 
 /*
