@@ -1,4 +1,4 @@
-@extends('components.layout.dashboard')
+@extends('components.layout.main')
 
 @section('title', 'Account Settings')
 

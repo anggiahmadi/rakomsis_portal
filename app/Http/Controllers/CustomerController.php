@@ -5,15 +5,21 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Customer::withCount(['tenants', 'subscriptions']);
+
+        if ($request->filled('q')) {
+            $query->where('name', 'like', '%'.$request->q.'%')->orWhere('email', 'like', '%'.$request->q.'%');
+        }
+
+        $customers = $query->orderBy('name')->paginate(20);
+
+        return view('admin.customers.index', compact('customers'));
     }
 
     /**

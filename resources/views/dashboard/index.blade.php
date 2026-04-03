@@ -1,4 +1,4 @@
-@extends('components.layout.dashboard')
+@extends('components.layout.main')
 
 @section('title', 'Dashboard')
 
@@ -11,72 +11,106 @@
         </div>
 
         <!-- Stats Grid -->
-        <div for="" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <!-- Quick Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Grid 1: Active Tenants -->
             <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #034c8f;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-600 text-sm font-medium">Account Status</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">Active</p>
+                        <p class="text-gray-600 text-sm font-medium">Active Tenants</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">
+                            @if ($tenants_count > 0)
+                                {{ $tenants_count }}
+                            @else
+                                <button type="button" id="trial-tenants-btn" class="px-3 py-1 text-sm rounded text-white"
+                                    style="background-color: #034c8f;">
+                                    Try now !!!
+                                </button>
+                            @endif
+                        </p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-[#034c8f]" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #00a8e3;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm font-medium">Member Since</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ Auth::user()->created_at->format('M Y') }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-[#00a8e3]" fill="currentColor" viewBox="0 0 20 20">
                             <path
-                                d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z">
+                                d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v12.5A2.25 2.25 0 003.75 18.5h12.5a2.25 2.25 0 002.25-2.25V9.5M18.5 1.5l-7 7m0 0l2-2m-2 2l-2-2">
                             </path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #7a8b9c;">
+            <!-- Grid 2: Subscription Status -->
+            <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #00a8e3;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-600 text-sm font-medium">Email Verified</p>
+                        <p class="text-gray-600 text-sm font-medium">Subscription</p>
                         <p class="text-2xl font-bold text-gray-900 mt-1">
-                            {{ Auth::user()->email_verified_at ? 'Yes' : 'No' }}
+                            @if ($unpaid_subscriptions > 0)
+                                {{ $unpaid_subscriptions }}
+                            @else
+                                <button type="button" id="trial-subscription-btn"
+                                    class="px-3 py-1 text-sm rounded text-white" style="background-color: #00a8e3;">
+                                    Try now !!!
+                                </button>
+                            @endif
                         </p>
                     </div>
-                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-[#00a8e3]" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #323F4C;">
+            <!-- Grid 3: Total Agent Commission -->
+            <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #7a8b9c;">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-600 text-sm font-medium">Agent</p>
+                        <p class="text-gray-600 text-sm font-medium">Total Agent Commission</p>
                         <p class="text-2xl font-bold text-gray-900 mt-1">
-                            {{ Auth::user()->agent ? 'Yes' : 'No' }}
+                            @if ($agent)
+                                Rp {{ number_format($agent->total_commission, 0, ',', '.') }}
+                            @else
+                                <button type="button" id="agent-commission-btn"
+                                    class="px-3 py-1 text-sm rounded text-white" style="background-color: #7a8b9c;">
+                                    Became an agent
+                                </button>
+                            @endif
                         </p>
                     </div>
                     <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <svg class="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M8.433 7.418c.155.03.299.112.358.278.06.166.047.37-.128.528-.637.635-1.876 1.038-3.708 1.038-.468 0-.944-.054-1.387-.172a2 2 0 00-.242 3.966c.857.143 1.8.194 2.75.194 1.933 0 3.735-.645 4.59-1.574.56-.54.588-1.472.014-2.04a.694.694 0 00-.havoc.118zm-1.88-1.637a4.5 4.5 0 00-1.516.294.75.75 0 11-.502-1.422A5.99 5.99 0 018 2a6 6 0 012.75 11.448.75.75 0 11-.75-1.299A4.5 4.5 0 108 2.75z">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid 4: Agent's Balance -->
+            <div class="bg-white rounded-lg shadow p-6 border-l-4" style="border-left-color: #323F4C;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Agent's Balance</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">
+                            @if ($agent)
+                                Rp {{ number_format($agent->balance, 0, ',', '.') }}
+                            @else
+                                <button type="button" id="agent-balance-btn" class="px-3 py-1 text-sm rounded text-white"
+                                    style="background-color: #323F4C;">
+                                    Became an agent
+                                </button>
+                            @endif
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z">
+                            </path>
                         </svg>
                     </div>
                 </div>
@@ -161,4 +195,211 @@
             </div>
         </div>
     </div>
+
+    <!-- Trial Modal (Tenants & Subscription) -->
+    <div id="trial-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 hidden">
+        <div class="bg-white rounded-xl w-full max-w-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Free Trial - 1 Month SaaS Access</h3>
+                <button id="close-trial-modal" class="text-gray-500 hover:text-gray-800">✕</button>
+            </div>
+            <div class="p-6 text-sm text-gray-700 space-y-3">
+                <p><strong>Get Started Free:</strong> Enjoy full access to all SaaS features for 1 month completely free.
+                </p>
+                <p><strong>No Credit Card Required:</strong> Start your trial immediately without entering payment details.
+                </p>
+                <p><strong>Full Functionality:</strong> Access all premium features during your trial period.</p>
+                <p><strong>Easy Upgrade:</strong> When your trial ends, upgrade to a paid plan or let your account pause.
+                </p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>Unlimited access to core features</li>
+                    <li>Customer support via email</li>
+                    <li>Data export capabilities</li>
+                </ul>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
+                <button id="cancel-trial-modal"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">Cancel</button>
+                <button id="continue-trial-modal" class="px-4 py-2 rounded-lg text-white font-semibold"
+                    style="background-color: #034c8f;">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Modal (Commission & Balance) -->
+    <div id="agent-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 hidden">
+        <div class="bg-white rounded-xl w-full max-w-lg shadow-lg overflow-hidden max-h-96 overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                <h3 class="text-lg font-semibold text-gray-900">Become an Agent - Benefits Breakdown</h3>
+                <button id="close-agent-modal" class="text-gray-500 hover:text-gray-800">✕</button>
+            </div>
+            <div class="p-6 text-sm text-gray-700 space-y-4">
+                <!-- Bronze Level -->
+                <div class="border-l-4 pl-4" style="border-left-color: #CD7F32;">
+                    <p class="font-semibold text-gray-900">🥉 Bronze Level (Start Here)</p>
+                    <p class="text-gray-600 mt-1">Entry-level agent membership available to all users.</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-600">
+                        <li><strong>Commission Rate:</strong> 2% on all referred sales</li>
+                        <li><strong>Customer Discount:</strong> 5% discount for your referrals</li>
+                        <li><strong>Support:</strong> Basic support and promotional materials</li>
+                        <li><strong>Requirement:</strong> No sales threshold required</li>
+                    </ul>
+                </div>
+
+                <!-- Silver Level -->
+                <div class="border-l-4 pl-4" style="border-left-color: #C0C0C0;">
+                    <p class="font-semibold text-gray-900">🥈 Silver Level</p>
+                    <p class="text-gray-600 mt-1">Upgrade after achieving IDR 100,000,000 in sales.</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-600">
+                        <li><strong>Commission Rate:</strong> 5% on all referred sales</li>
+                        <li><strong>Customer Discount:</strong> 10% discount for your referrals</li>
+                        <li><strong>Support:</strong> Priority support + exclusive promotions</li>
+                        <li><strong>Requirement:</strong> IDR 100,000,000 total sales</li>
+                    </ul>
+                </div>
+
+                <!-- Gold Level -->
+                <div class="border-l-4 pl-4" style="border-left-color: #FFD700;">
+                    <p class="font-semibold text-gray-900">🥇 Gold Level</p>
+                    <p class="text-gray-600 mt-1">Premium agent status with IDR 1,000,000,000+ in sales.</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-600">
+                        <li><strong>Commission Rate:</strong> 10% on all referred sales</li>
+                        <li><strong>Customer Discount:</strong> 15% discount for your referrals</li>
+                        <li><strong>Support:</strong> Dedicated account management + early access</li>
+                        <li><strong>Requirement:</strong> IDR 1,000,000,000 total sales</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end sticky bottom-0 bg-white">
+                <button id="cancel-agent-modal"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">Cancel</button>
+                <button id="continue-agent-modal" class="px-4 py-2 rounded-lg text-white font-semibold"
+                    style="background-color: #034c8f;">Continue to be an Agent</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Agent -->
+    <div id="agent-confirmation-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 hidden">
+        <div class="bg-white rounded-xl w-full max-w-md shadow-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Confirm Agent Registration</h3>
+            </div>
+            <div class="p-6 text-sm text-gray-700 space-y-4">
+                <p>Are you sure you want to become an agent? You will start at the <strong>Bronze level</strong> with:</p>
+                <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                    <li>2% commission on all referred sales</li>
+                    <li>5% customer discount</li>
+                    <li>Basic support and promotional materials</li>
+                </ul>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
+                <button id="cancel-confirmation"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">Cancel</button>
+                <button id="confirm-agent" class="px-4 py-2 rounded-lg text-white font-semibold"
+                    style="background-color: #034c8f;">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Trial Modal Handlers
+        document.getElementById('trial-tenants-btn')?.addEventListener('click', function() {
+            document.getElementById('trial-modal').classList.remove('hidden');
+            window.lastTrialType = 'tenants';
+        });
+
+        document.getElementById('trial-subscription-btn')?.addEventListener('click', function() {
+            document.getElementById('trial-modal').classList.remove('hidden');
+            window.lastTrialType = 'subscription';
+        });
+
+        document.getElementById('close-trial-modal').addEventListener('click', function() {
+            document.getElementById('trial-modal').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-trial-modal').addEventListener('click', function() {
+            document.getElementById('trial-modal').classList.add('hidden');
+        });
+
+        document.getElementById('continue-trial-modal').addEventListener('click', function() {
+            // Handle trial continuation
+            alert('Trial activated for ' + window.lastTrialType);
+            document.getElementById('trial-modal').classList.add('hidden');
+        });
+
+        // Agent Modal Handlers
+        document.getElementById('agent-commission-btn')?.addEventListener('click', function() {
+            document.getElementById('agent-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('agent-balance-btn')?.addEventListener('click', function() {
+            document.getElementById('agent-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('close-agent-modal').addEventListener('click', function() {
+            document.getElementById('agent-modal').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-agent-modal').addEventListener('click', function() {
+            document.getElementById('agent-modal').classList.add('hidden');
+        });
+
+        document.getElementById('continue-agent-modal').addEventListener('click', function() {
+            document.getElementById('agent-modal').classList.add('hidden');
+            document.getElementById('agent-confirmation-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancel-confirmation').addEventListener('click', function() {
+            document.getElementById('agent-confirmation-modal').classList.add('hidden');
+        });
+
+        document.getElementById('confirm-agent').addEventListener('click', function() {
+            // Get CSRF token from meta tag
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            // Disable button to prevent double submission
+            this.disabled = true;
+            const originalText = this.textContent;
+            this.textContent = 'Processing...';
+
+            // Make AJAX POST request to agent.store route
+            fetch('{{ route('agent.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        level: 'bronze' // Starting level is always bronze
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => Promise.reject(data));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Close modal
+                    document.getElementById('agent-confirmation-modal').classList.add('hidden');
+
+                    // Show success message
+                    alert('Congratulations! You are now a Bronze agent.');
+
+                    // Reload page to reflect agent status
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error becoming an agent. Please try again.');
+
+                    // Re-enable button
+                    this.disabled = false;
+                    this.textContent = originalText;
+                });
+        });
+    </script>
 @endsection

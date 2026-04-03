@@ -32,7 +32,13 @@ class UserController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return Redirect::intended('dashboard');
+            $user = Auth::user();
+
+            if ($user && $user->isAdmin()) {
+                return Redirect::intended('admin')->with('success', 'Welcome back, Admin!');
+            }
+
+            return Redirect::intended('dashboard')->with('success', 'Hello, ' . $user->name . '!!! How are you today? Welcome back to your dashboard!');
         }
 
         return back()->withErrors([

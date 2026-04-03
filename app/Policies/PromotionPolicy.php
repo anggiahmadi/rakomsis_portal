@@ -13,7 +13,7 @@ class PromotionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
@@ -21,7 +21,7 @@ class PromotionPolicy
      */
     public function view(User $user, Promotion $promotion): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
@@ -29,7 +29,7 @@ class PromotionPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
@@ -37,7 +37,7 @@ class PromotionPolicy
      */
     public function update(User $user, Promotion $promotion): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
@@ -45,7 +45,7 @@ class PromotionPolicy
      */
     public function delete(User $user, Promotion $promotion): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**

@@ -33,7 +33,7 @@ class Withdrawal extends Model
 
     public function approve()
     {
-        $this->withdrawal_status = WithdrawalStatus::APPROVED;
+        $this->withdrawal_status = WithdrawalStatus::Approved;
 
         $this->processed_at = now();
 
@@ -42,7 +42,7 @@ class Withdrawal extends Model
 
     public function reject()
     {
-        $this->withdrawal_status = WithdrawalStatus::REJECTED;
+        $this->withdrawal_status = WithdrawalStatus::Rejected;
 
         $this->processed_at = now();
 
@@ -51,17 +51,17 @@ class Withdrawal extends Model
 
     public function isPending(): bool
     {
-        return $this->withdrawal_status === WithdrawalStatus::PENDING;
+        return $this->withdrawal_status === WithdrawalStatus::Pending;
     }
 
     public function isApproved(): bool
     {
-        return $this->withdrawal_status === WithdrawalStatus::APPROVED;
+        return $this->withdrawal_status === WithdrawalStatus::Approved;
     }
 
     public function isRejected(): bool
     {
-        return $this->withdrawal_status === WithdrawalStatus::REJECTED;
+        return $this->withdrawal_status === WithdrawalStatus::Rejected;
     }
 
     public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany

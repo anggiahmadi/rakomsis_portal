@@ -15,11 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Admin',
+            'email' => 'admin@rakomsis.com',
+            'password' => bcrypt('rakomsis' . date('Y')),
+            'is_employee' => true,
+        ])->employee()->create([
+            'code' => 'EMP' . str_pad(1, 4, '0', STR_PAD_LEFT), // Auto-generated employee code
+            'position' => 'Administrator',
+        ]);
+
+        $this->call([
+            ProductSeeder::class,
         ]);
     }
 }

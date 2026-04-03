@@ -75,6 +75,30 @@ enum AgentLevel: string
         };
     }
 
+    public function benefitsArray(): array
+    {
+        return match ($this) {
+            self::Bronze => [
+                'commission_rate' => $this->commissionRate(),
+                'discount_rate' => $this->discountRate(),
+                'support_level' => 'Basic Support',
+                'sales_threshold' => $this->salesThreshold(),
+            ],
+            self::Silver => [
+                'commission_rate' => $this->commissionRate(),
+                'discount_rate' => $this->discountRate(),
+                'support_level' => 'Priority Support',
+                'sales_threshold' => $this->salesThreshold(),
+            ],
+            self::Gold => [
+                'commission_rate' => $this->commissionRate(),
+                'discount_rate' => $this->discountRate(),
+                'support_level' => 'Dedicated Account Management',
+                'sales_threshold' => $this->salesThreshold(),
+            ],
+        };
+    }
+
     public function requirements(): string
     {
         return match ($this) {

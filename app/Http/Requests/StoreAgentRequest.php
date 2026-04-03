@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreAgentRequest extends FormRequest
 {
@@ -12,7 +13,7 @@ class StoreAgentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return Auth::check() && !Auth::user()->is_employee;
     }
 
     /**
@@ -23,7 +24,8 @@ class StoreAgentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'bank_name' => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:255',
         ];
     }
 }
