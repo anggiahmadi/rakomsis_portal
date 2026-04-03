@@ -1,0 +1,16 @@
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'Laravel') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+<body class="bg-background text-foreground">
+    <main class="max-w-7x1 mx-auto px-6 pb-10">
+        {{ $slot }}
+    </main>
+</body>
+
+</html>

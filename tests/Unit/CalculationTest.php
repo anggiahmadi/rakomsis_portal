@@ -6,7 +6,6 @@ use App\Models\Agent;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Subscription;
-use App\Models\Withdrawal;
 
 test('calculate agent commission', function () {
     // Create a new customer using the factory

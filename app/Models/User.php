@@ -56,7 +56,7 @@ class User extends Authenticatable
 
     public function employee(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(Employee::class);
+        return $this->hasOne(Employee::class, 'user_id', 'id');
     }
 
     public function isAdmin(): bool
