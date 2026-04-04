@@ -13,7 +13,7 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && !Auth::user()->is_employee;
+        return Auth::check() && Auth::user()->is_employee;
     }
 
     /**

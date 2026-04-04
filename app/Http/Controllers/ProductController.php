@@ -6,6 +6,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 
 class ProductController extends Controller
@@ -20,18 +21,24 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::query()
-            ->when($request->search, function ($query) use ($request) {
-                $query->where('name', 'like', '%' . $request->search . '%')
-                      ->orWhere('code', 'like', '%' . $request->search . '%');
+        $showDeleted = $request->boolean('show_deleted');
+
+        $query = $showDeleted ? Product::onlyTrashed() : Product::query();
+
+        $products = $query
+            ->when($request->search, function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('code', 'like', '%' . $request->search . '%');
             })
-            ->when($request->product_type, function ($query) use ($request) {
-                $query->where('product_type', $request->product_type);
+            ->when($request->product_type, function ($q) use ($request) {
+                $q->where('product_type', $request->product_type);
             })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('admin.product', compact('products'));
+        $singleProducts = Product::where('product_type', 'single')->get();
+
+        return view('admin.product', compact('products', 'singleProducts', 'showDeleted'));
     }
 
     /**
@@ -47,13 +54,19 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
+        DB::beginTransaction();
+
         $product = Product::create($request->validated());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product created successfully.',
-            'product' => $product
-        ]);
+        // If it's a bundle, attach included products
+
+        if ($request->product_type === 'bundle' && $request->included_products) {
+            $product->includedProducts()->sync($request->included_products);
+        }
+
+        DB::commit();
+
+        return Redirect::route('products.index')->with('success', 'Product created successfully.');
     }
 
     /**
@@ -103,12 +116,59 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
+        DB::beginTransaction();
+
         $product->update($request->validated());
+
+        // If it's a bundle, attach included products
+
+        $product->includedProducts()->sync([]);
+
+        if ($request->product_type === 'bundle' && $request->included_products) {
+            $product->includedProducts()->sync($request->included_products);
+        }
+
+        DB::commit();
+
+        return Redirect::route('products.index')->with('success', 'Product updated successfully.');
+    }
+
+    /**
+     * Restore a soft-deleted product.
+     */
+    public function restore($id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+        $product->restore();
 
         return response()->json([
             'success' => true,
-            'message' => 'Product updated successfully.',
-            'product' => $product
+            'message' => 'Product restored successfully.'
+        ]);
+    }
+
+    /**
+     * Permanently delete a soft-deleted product.
+     */
+    public function permanentDelete($id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        $isUsed = \App\Models\Subscription::withTrashed()->where('product_id', $product->id)->exists();
+        $isIncludedInBundle = DB::table('product_includes')->where('included_product_id', $product->id)->exists();
+
+        if ($isUsed || $isIncludedInBundle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product cannot be permanently deleted because it is referenced in subscriptions or bundles.'
+            ], 422);
+        }
+
+        $product->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product permanently deleted.'
         ]);
     }
 
@@ -120,10 +180,12 @@ class ProductController extends Controller
         // Check if product is used in subscriptions
         $isUsed = \App\Models\Subscription::where('product_id', $product->id)->exists();
 
-        if ($isUsed) {
+        $isIncludedInBundle = DB::table('product_includes')->where('included_product_id', $product->id)->exists();
+
+        if ($isUsed || $isIncludedInBundle) {
             return response()->json([
                 'success' => false,
-                'message' => 'This product cannot be deleted because it is currently used in active subscriptions.'
+                'message' => 'This product cannot be deleted because it is currently used in active subscriptions or included in a bundle.'
             ], 422);
         }
 
@@ -132,21 +194,6 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product deleted successfully.'
-        ]);
-    }
-
-    /**
-     * Check if product can be deleted (not used in active subscriptions).
-     */
-    public function checkUsage(Product $product)
-    {
-        $this->authorize('delete', $product);
-
-        $isUsed = \App\Models\Subscription::where('product_id', $product->id)->exists();
-
-        return response()->json([
-            'can_delete' => !$isUsed,
-            'message' => $isUsed ? 'Product is currently used in subscriptions and cannot be deleted.' : 'Product can be safely deleted.'
         ]);
     }
 }

@@ -61,7 +61,8 @@ Route::middleware('auth')->group(function () {
 
         // Product CRUD
         Route::resource('products', ProductController::class);
-        Route::get('products/{product}/check-usage', [ProductController::class, 'checkUsage'])->name('products.check-usage');
+        Route::post('products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+        Route::delete('products/{id}/permanent-delete', [ProductController::class, 'permanentDelete'])->name('products.permanent-delete');
 
         // Promotion CRUD
         Route::resource('promotions', PromotionController::class)->except(['show']);

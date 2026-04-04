@@ -25,11 +25,18 @@
                     </select>
                 </div>
                 <div class="flex items-end gap-2">
+                    <label class="flex items-center gap-2 pb-2 cursor-pointer select-none">
+                        <input type="checkbox" name="show_deleted" value="1" {{ $showDeleted ? 'checked' : '' }}
+                            class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                        <span class="text-sm font-medium text-gray-700">Show Deleted</span>
+                    </label>
+                </div>
+                <div class="flex items-end gap-2">
                     <button type="submit"
                         class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Filter
                     </button>
-                    @if (request('search') || request('product_type'))
+                    @if (request('search') || request('product_type') || $showDeleted)
                         <a href="{{ route('products.index') }}"
                             class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Clear Filters
@@ -42,16 +49,20 @@
         <!-- Products Table -->
         <div class="bg-white shadow-sm rounded-lg overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900">Products ({{ $products->total() }})</h3>
-                <button type="button" onclick="openProductFormModal()"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6">
-                        </path>
-                    </svg>
-                    Add New Product
-                </button>
+                <h3 class="text-lg font-medium text-gray-900">
+                    {{ $showDeleted ? 'Deleted Products' : 'Products' }} ({{ $products->total() }})
+                </h3>
+                @unless ($showDeleted)
+                    <button type="button" onclick="openProductFormModal()"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                            </path>
+                        </svg>
+                        Add New Product
+                    </button>
+                @endunless
             </div>
 
             @if ($products->count() > 0)
@@ -79,50 +90,88 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach ($products as $product)
-                                <tr class="hover:bg-gray-50">
+                                <tr class="{{ $product->trashed() ? 'bg-red-50 opacity-75' : 'hover:bg-gray-50' }}">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
-                                            <button type="button" onclick="viewProduct({{ $product->id }})"
-                                                class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                    </path>
-                                                </svg>
-                                                View
-                                            </button>
-                                            <button type="button"
-                                                class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                    </path>
-                                                </svg>
-                                                Edit
-                                            </button>
-                                            <button type="button"
-                                                class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                    </path>
-                                                </svg>
-                                                Delete
-                                            </button>
+                                            @if ($product->trashed())
+                                                <button type="button"
+                                                    onclick="restoreProduct({{ $product->id }}, @js($product->name))"
+                                                    class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                        </path>
+                                                    </svg>
+                                                    Restore
+                                                </button>
+                                                <button type="button"
+                                                    onclick="permanentDeleteProduct({{ $product->id }}, @js($product->name))"
+                                                    class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                    Delete Permanently
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="viewProduct({{ $product->id }})"
+                                                    class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                        </path>
+                                                    </svg>
+                                                    View
+                                                </button>
+                                                <button type="button" onclick="editProduct({{ $product->id }})"
+                                                    class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                        </path>
+                                                    </svg>
+                                                    Edit
+                                                </button>
+                                                <button type="button"
+                                                    onclick="deleteProduct({{ $product->id }}, @js($product->name))"
+                                                    class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $product->code }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <div class="max-w-xs truncate" title="{{ $product->name }}">
+                                        <div class="max-w-xs truncate {{ $product->trashed() ? 'line-through text-gray-400' : '' }}"
+                                            title="{{ $product->name }}">
                                             {{ $product->name }}
                                         </div>
+                                        @if ($product->trashed())
+                                            <span
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 mt-1">
+                                                Deleted {{ $product->deleted_at->format('M d, Y') }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         @php
@@ -201,106 +250,6 @@
             @endif
         </div>
     </div>
-
-    <!-- Product Modal -->
-    {{-- <div x-show="showProductModal" x-clock @keydown.escape.window="closeProductModal()" @click.self="closeProductModal()"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white"
-            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
-            <div class="flex items-center justify-between p-4 border-b">
-                <h3 class="text-lg font-medium text-gray-900" x-text="modalTitle">Add New Product</h3>
-                <button type="button" @click="closeProductModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <form @submit.prevent="submitProductForm()" class="p-4">
-                @csrf
-                <input type="hidden" name="_method" x-bind:value="formMethod">
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="code" class="block text-sm font-medium text-gray-700">Product Code</label>
-                        <input type="text" x-model="form.code" name="code" id="code" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
-                        <input type="text" x-model="form.name" name="name" id="name" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea x-model="form.description" name="description" id="description" rows="3"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
-                    </div>
-
-                    <div>
-                        <label for="price_per_location" class="block text-sm font-medium text-gray-700">Price per Location
-                            ($)</label>
-                        <input type="number" x-model="form.price_per_location" name="price_per_location"
-                            id="price_per_location" step="0.01" min="0"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="price_per_user" class="block text-sm font-medium text-gray-700">Price per User
-                            (IDR)</label>
-                        <input type="number" x-model="form.price_per_user" name="price_per_user" id="price_per_user"
-                            step="0.01" min="0"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="tax_percentage" class="block text-sm font-medium text-gray-700">Tax Percentage
-                            (IDR)</label>
-                        <input type="number" x-model="form.tax_percentage" name="tax_percentage" id="tax_percentage"
-                            step="0.01" min="0" max="100" value="11"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="billing_cycle" class="block text-sm font-medium text-gray-700">Billing Cycle</label>
-                        <select x-model="form.billing_cycle" name="billing_cycle" id="billing_cycle" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="monthly">Monthly</option>
-                            <option value="yearly">Yearly</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="product_type" class="block text-sm font-medium text-gray-700">Product Type</label>
-                        <select x-model="form.product_type" name="product_type" id="product_type" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="single">Single Product</option>
-                            <option value="bundle">Product Bundle</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                    <button type="button" @click="closeProductModal()"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Cancel
-                    </button>
-                    <button type="submit" :disabled="loading"
-                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span x-text="loading ? 'Saving...' : (form.id ? 'Update Product' : 'Create Product')"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div> --}}
 
     <!-- View Product Modal -->
     <div id="product-view-modal"
@@ -390,39 +339,44 @@
         <div
             class="bg-white rounded-xl w-full max-w-md sm:max-w-xl lg:max-w-2xl shadow-2xl overflow-hidden border border-blue-700/20 max-h-[calc(100vh-4rem)] overflow-y-auto">
             <div class="px-5 py-3 bg-blue-700 text-white flex items-center justify-between">
-                <h3 class="text-base sm:text-lg font-bold">Create Product</h3>
+                <h3 id="product-form-modal-title" class="text-base sm:text-lg font-bold">Create Product</h3>
                 <button id="close-product-form-modal" class="text-white hover:text-slate-200">✕</button>
             </div>
 
             <form id="product-form" class="p-6 space-y-4" method="POST" action="{{ route('products.store') }}">
                 @csrf
+                <input type="hidden" name="_method" id="product-form-method" value="POST">
+
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Code</label>
-                        <input type="text" name="code"
+                        <input type="text" name="code" id="product-code"
                             class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2" required>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Name</label>
-                        <input type="text" name="name"
+                        <input type="text" name="name" id="product-name"
                             class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2" required>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-blue-900">Description</label>
-                    <textarea name="description" rows="3" class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2"></textarea>
+                    <textarea name="description" id="product-description" rows="3"
+                        class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Price per Location</label>
                         <input type="number" step="0.01" min="0" name="price_per_location"
+                            id="product-price-per-location"
                             class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Price per User</label>
                         <input type="number" step="0.01" min="0" name="price_per_user"
+                            id="product-price-per-user"
                             class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
                     </div>
                 </div>
@@ -431,11 +385,12 @@
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Tax Percentage</label>
                         <input type="number" step="0.01" min="0" max="100" name="tax_percentage"
+                            id="product-tax-percentage"
                             class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Billing Cycle</label>
-                        <select name="billing_cycle"
+                        <select name="billing_cycle" id="product-billing-cycle"
                             class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
                             <option value="monthly">Monthly</option>
                             <option value="yearly">Yearly</option>
@@ -446,24 +401,47 @@
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Product Type</label>
-                        <select name="product_type" class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
+                        <select id="product-form-product-type" name="product_type"
+                            onchange="handleProductTypeChange(this.value)"
+                            class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
                             <option value="single">Single Product</option>
                             <option value="bundle">Product Bundle</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-blue-900">Tax Status</label>
-                        <select name="tax_status" class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
+                        <select name="tax_status" id="product-tax-status"
+                            class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2">
                             <option value="1">Taxable</option>
                             <option value="0">Non-taxable</option>
                         </select>
                     </div>
                 </div>
+                <div class="mt-4 hidden" id="product-form-included-products-container">
+                    <label class="block text-sm font-semibold text-blue-900">Included Products</label>
+                    <input type="text" id="product-form-included-search"
+                        placeholder="Search included products by code or name..."
+                        class="mt-2 block w-full border border-blue-200 rounded-md px-3 py-2 text-sm">
+                    <select id="product-form-included-products" name="included_products[]" multiple
+                        class="mt-1 block w-full border border-blue-200 rounded-md px-3 py-2 min-h-44">
+                        @foreach ($singleProducts as $singleProduct)
+                            <option value="{{ $singleProduct->id }}">
+                                {{ $singleProduct->code }} - {{ $singleProduct->name }}
+                                ({{ $singleProduct->price_per_location > 0 ? 'IDR ' . number_format($singleProduct->price_per_location) . ' per location' : '' }}
+                                {{ $singleProduct->price_per_user > 0 ? 'IDR ' . number_format($singleProduct->price_per_user) . ' per user' : '' }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500">
+                        Hold Cmd (Mac) or Ctrl (Windows) to select multiple items.
+                    </p>
+                </div>
 
                 <div class="flex justify-end gap-2 pt-2 border-t border-blue-100">
                     <button type="button" id="close-product-form-modal-cta"
                         class="px-4 py-2 rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Save
+                    <button type="submit" id="product-form-submit-button"
+                        class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Save
                         Product</button>
                 </div>
             </form>
@@ -471,6 +449,71 @@
     </div>
 
     <script>
+        const productFormDefaults = {
+            createAction: '{{ route('products.store') }}',
+            updateBaseUrl: '{{ url('products') }}'
+        };
+
+        function generateProductCode() {
+            return 'PROD-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+        }
+
+        function resetIncludedProductsSelection() {
+            const includedProducts = document.getElementById('product-form-included-products');
+
+            Array.from(includedProducts.options).forEach(option => {
+                option.selected = false;
+            });
+        }
+
+        function resetProductFormState() {
+            const form = document.getElementById('product-form');
+            const productType = document.getElementById('product-form-product-type');
+            const searchInput = document.getElementById('product-form-included-search');
+
+            form.reset();
+            form.action = productFormDefaults.createAction;
+            document.getElementById('product-form-method').value = 'POST';
+            document.getElementById('product-form-modal-title').textContent = 'Create Product';
+            document.getElementById('product-form-submit-button').textContent = 'Save Product';
+            document.getElementById('product-code').value = generateProductCode();
+
+            if (searchInput) {
+                searchInput.value = '';
+            }
+
+            resetIncludedProductsSelection();
+            productType.value = 'single';
+            handleProductTypeChange('single');
+            filterIncludedProductsOptions();
+        }
+
+        function handleProductTypeChange(value) {
+            if (value === 'bundle') {
+                document.getElementById('product-form-included-products-container').classList.remove('hidden');
+                document.getElementById('product-form-included-products').disabled = false;
+            } else {
+                document.getElementById('product-form-included-products-container').classList.add('hidden');
+                document.getElementById('product-form-included-products').disabled = true;
+                resetIncludedProductsSelection();
+            }
+        }
+
+        function filterIncludedProductsOptions() {
+            const searchInput = document.getElementById('product-form-included-search');
+            const select = document.getElementById('product-form-included-products');
+
+            if (!searchInput || !select) {
+                return;
+            }
+
+            const keyword = searchInput.value.trim().toLowerCase();
+            Array.from(select.options).forEach(option => {
+                const optionText = option.text.toLowerCase();
+                option.hidden = keyword !== '' && !optionText.includes(keyword);
+            });
+        }
+
         function setProductViewTab(tab) {
             const detailsTab = document.getElementById('product-view-tab-details');
             const includedTab = document.getElementById('product-view-tab-included');
@@ -578,6 +621,107 @@
                 });
         }
 
+        async function deleteProduct(productId, productName) {
+            const confirmed = window.confirm(
+                `Delete product "${productName}"? This action cannot be undone.`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch(`{{ url('products') }}/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw result;
+                }
+
+                alert(result.message || 'Product deleted successfully.');
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to delete product.');
+            }
+        }
+
+        async function restoreProduct(productId, productName) {
+            const confirmed = window.confirm(`Restore product "${productName}"?`);
+            if (!confirmed) {
+                return;
+            }
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch(`{{ url('products') }}/${productId}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw result;
+                }
+
+                alert(result.message || 'Product restored successfully.');
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to restore product.');
+            }
+        }
+
+        async function permanentDeleteProduct(productId, productName) {
+            const confirmed = window.confirm(
+                `Permanently delete product "${productName}"? This cannot be undone and will remove all data.`
+            );
+            if (!confirmed) {
+                return;
+            }
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch(`{{ url('products') }}/${productId}/permanent-delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw result;
+                }
+
+                alert(result.message || 'Product permanently deleted.');
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to permanently delete product.');
+            }
+        }
+
         document.getElementById('close-product-view-modal').addEventListener('click', function() {
             closeModal('product-view-modal');
         });
@@ -594,7 +738,67 @@
         });
 
         function openProductFormModal() {
+            resetProductFormState();
             document.getElementById('product-form-modal').classList.remove('hidden');
+            const productType = document.getElementById('product-form-product-type');
+            handleProductTypeChange(productType ? productType.value : 'single');
+            filterIncludedProductsOptions();
+        }
+
+        async function editProduct(productId) {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch(`${productFormDefaults.updateBaseUrl}/${productId}/edit`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw errorData;
+                }
+
+                const product = await response.json();
+                const form = document.getElementById('product-form');
+                const includedProducts = document.getElementById('product-form-included-products');
+
+                resetProductFormState();
+                form.action = `${productFormDefaults.updateBaseUrl}/${product.id}`;
+                document.getElementById('product-form-method').value = 'PUT';
+                document.getElementById('product-form-modal-title').textContent = 'Edit Product';
+                document.getElementById('product-form-submit-button').textContent = 'Update Product';
+
+                document.getElementById('product-code').value = product.code || '';
+                document.getElementById('product-name').value = product.name || '';
+                document.getElementById('product-description').value = product.description || '';
+                document.getElementById('product-price-per-location').value = product.price_per_location ?? '';
+                document.getElementById('product-price-per-user').value = product.price_per_user ?? '';
+                document.getElementById('product-tax-percentage').value = product.tax_percentage ?? '';
+                document.getElementById('product-billing-cycle').value = product.billing_cycle || 'monthly';
+                document.getElementById('product-form-product-type').value = product.product_type || 'single';
+                document.getElementById('product-tax-status').value = String(product.tax_status ?? '1');
+
+                handleProductTypeChange(product.product_type || 'single');
+
+                if (Array.isArray(product.included_products)) {
+                    const includedIds = product.included_products.map(item => String(item.id));
+
+                    Array.from(includedProducts.options).forEach(option => {
+                        option.selected = includedIds.includes(option.value);
+                    });
+                }
+
+                filterIncludedProductsOptions();
+                document.getElementById('product-form-modal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load product data for editing.');
+            }
         }
 
         function closeProductFormModal() {
@@ -607,6 +811,10 @@
 
         document.getElementById('close-product-form-modal-cta').addEventListener('click', function() {
             closeProductFormModal();
+        });
+
+        document.getElementById('product-form-included-search').addEventListener('input', function() {
+            filterIncludedProductsOptions();
         });
     </script>
 
