@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdatePromotionRequest extends FormRequest
 {
@@ -12,7 +13,7 @@ class UpdatePromotionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return Auth::check() && Auth::user()->is_employee;
     }
 
     /**
@@ -23,7 +24,17 @@ class UpdatePromotionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'code' => ['required', 'string', 'max:50', 'unique:promotions,code,' . $this->route('promotion')->id],
+            'name' => ['required', 'string', 'max:255'],
+            'promotion_rules' => ['required', 'in:all,new_customers,specific_length_of_term'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'discount_type' => ['required', 'in:percentage,amount'],
+            'discount_value' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'has_specific_product' => ['required', 'boolean'],
+            'specific_length_of_term' => ['nullable', 'integer', 'min:1'],
+            'billing_cycle' => ['nullable', 'in:monthly,yearly'],
         ];
     }
 }

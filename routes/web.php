@@ -65,7 +65,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('products/{id}/permanent-delete', [ProductController::class, 'permanentDelete'])->name('products.permanent-delete');
 
         // Promotion CRUD
-        Route::resource('promotions', PromotionController::class)->except(['show']);
+        Route::resource('promotions', PromotionController::class);
+        Route::post('promotions/{id}/restore', [PromotionController::class, 'restore'])->name('promotions.restore');
+        Route::delete('promotions/{id}/permanent-delete', [PromotionController::class, 'permanentDelete'])->name('promotions.permanent-delete');
 
         // Customer List
         Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');

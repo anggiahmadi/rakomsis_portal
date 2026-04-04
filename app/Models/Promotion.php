@@ -26,6 +26,7 @@ class Promotion extends Model
         'specific_length_of_term',
         'discount_type',
         'discount_value',
+        'has_specific_product',
     ];
 
     protected $casts = [
@@ -36,7 +37,13 @@ class Promotion extends Model
         'specific_length_of_term' => 'integer',
         'discount_type' => DiscountType::class,
         'discount_value' => 'double',
+        'has_specific_product' => 'boolean',
     ];
+
+    public function products(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_promotion', 'promotion_id', 'product_id')->withTimestamps();
+    }
 
     public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

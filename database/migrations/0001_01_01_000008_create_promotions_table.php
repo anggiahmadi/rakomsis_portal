@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Product;
+use App\Models\Promotion;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,8 +26,17 @@ return new class extends Migration
             $table->integer('specific_length_of_term')->nullable(); // The specific length of term in months, applicable if promotion_rules is set to specific_length_of_term
             $table->string('discount_type')->default('percentage'); // percentage or fixed
             $table->double('discount_value')->default(0); // The value of the discount, either a percentage or a fixed amount depending on the discount_type
+            $table->boolean('has_specific_product')->default(false); // Whether the promotion applies to specific products
             $table->timestamps();
             $table->softDeletes();
+        });
+
+
+        Schema::create('product_promotion', function (Blueprint $table) {
+            $table->foreignIdFor(Product::class)->constrained()->onDelete('cascade'); // Foreign key to products table
+            $table->foreignIdFor(Promotion::class)->constrained()->onDelete('cascade'); // Foreign key to promotions table
+            $table->primary(['product_id', 'promotion_id']);
+            $table->timestamps();
         });
     }
 
@@ -34,6 +45,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('product_promotion');
         Schema::dropIfExists('promotions');
     }
 };

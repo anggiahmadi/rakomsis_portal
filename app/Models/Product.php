@@ -40,4 +40,9 @@ class Product extends Model
     {
         return $this->belongsToMany(Product::class, 'product_includes', 'included_product_id', 'main_product_id')->withTimestamps();
     }
+
+    public function promotions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Promotion::class, 'product_promotion', 'product_id', 'promotion_id')->withTimestamps();
+    }
 }
