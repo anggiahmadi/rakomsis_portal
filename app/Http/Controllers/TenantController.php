@@ -14,11 +14,13 @@ class TenantController extends Controller
      */
     public function index(Request $request)
     {
-        // Employee (admin) scope already enforced by route middleware.
-        // Provide tenant list with related metrics and simple search.
+        $showDeleted = $request->boolean('show_deleted');
+
         $query = Tenant::withCount(['customers', 'subscriptions', 'activeSubscriptions']);
 
-        if ($request->filled('q')) {
+        $query = $showDeleted ? $query->onlyTrashed() : $query->whereNull('deleted_at');
+
+         if ($request->filled('q')) {
             $query->where('name', 'like', '%'.$request->q.'%')
                   ->orWhere('domain', 'like', '%'.$request->q.'%')
                   ->orWhere('code', 'like', '%'.$request->q.'%');
@@ -26,7 +28,7 @@ class TenantController extends Controller
 
         $tenants = $query->orderBy('name')->paginate(20);
 
-        return view('admin.tenants.index', compact('tenants'));
+        return view('pages.tenant', compact('tenants', 'showDeleted'));
     }
 
     /**

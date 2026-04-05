@@ -22,6 +22,7 @@ class AgentController extends Controller
     public function index()
     {
         $user = Auth::user();
+
         $agent = Agent::where('user_id', $user->id)->first();
 
         if (!$agent) {

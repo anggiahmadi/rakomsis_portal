@@ -3,6 +3,7 @@
 use App\Models\Agent;
 use App\Models\Product;
 use App\Models\Promotion;
+use App\Models\Subscription;
 use App\Models\Tenant;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -18,7 +19,6 @@ return new class extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Tenant::class)->constrained()->onDelete('cascade'); // Each subscription belongs to a tenant
-            $table->foreignIdFor(Product::class)->constrained()->onDelete('cascade'); // Each subscription is for a specific product
             $table->foreignIdFor(Agent::class)->nullable()->constrained()->onDelete('set null'); // Optional agent associated with the subscription for commission tracking
             $table->foreignIdFor(Promotion::class)->nullable()->constrained()->onDelete('set null'); // Optional promotion applied to the subscription
             $table->string('code'); // Unique code for subscription identification and auto generation
@@ -43,6 +43,13 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+        Schema::create('product_subscription', function (Blueprint $table) {
+            $table->foreignIdFor(Product::class)->constrained()->onDelete('cascade'); // Foreign key to products table
+            $table->foreignIdFor(Subscription::class)->constrained()->onDelete('cascade'); // Foreign key to subscriptions table
+            $table->primary(['product_id', 'subscription_id']);
+            $table->timestamps();
+        });
     }
 
     /**
@@ -50,6 +57,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('product_subscription');
         Schema::dropIfExists('subscriptions');
     }
 };

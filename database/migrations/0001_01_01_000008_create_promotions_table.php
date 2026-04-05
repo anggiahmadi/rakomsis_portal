@@ -31,7 +31,6 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-
         Schema::create('product_promotion', function (Blueprint $table) {
             $table->foreignIdFor(Product::class)->constrained()->onDelete('cascade'); // Foreign key to products table
             $table->foreignIdFor(Promotion::class)->constrained()->onDelete('cascade'); // Foreign key to promotions table

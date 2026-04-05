@@ -15,7 +15,6 @@ class Subscription extends Model
 
     protected $fillable = [
         'tenant_id',
-        'product_id',
         'agent_id',
         'promotion_id',
         'code',
@@ -52,27 +51,27 @@ class Subscription extends Model
         'subscription_status' => SubscriptionStatus::class
     ];
 
-    public function tenant()
+    public function tenant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
-    public function product()
+    public function products(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsToMany(Product::class, 'product_subscription', 'subscription_id', 'product_id')->withTimestamps();
     }
 
-    public function agent()
+    public function agent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Agent::class);
     }
 
-    public function promotion()
+    public function promotion(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Promotion::class);
     }
 
-    public function payments()
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Payment::class);
     }

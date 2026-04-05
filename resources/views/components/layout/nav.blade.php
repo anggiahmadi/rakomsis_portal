@@ -37,22 +37,28 @@
         @php
             $adminItems = [
                 [
-                    'name' => 'Admin Dashboard',
+                    'name' => 'Admin',
                     'route' => 'admin',
-                    'icon' => 'M10 2a8 8 0 100 16 8 8 0 000-16z',
+                    'icon' =>
+                        'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z',
                 ],
                 [
                     'name' => 'Product',
                     'route' => 'products.index',
-                    'icon' => 'M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z',
+                    'icon' =>
+                        'M21 16.5c0 .38-.21.71-.53.88l-7.97 4.44c-.31.17-.69.17-1 0L3.53 17.38c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.97-4.44c.31-.17.69-.17 1 0l7.97 4.44c.32.17.53.5.53.88v9zM12 4.15L5.04 8.02 12 11.85l6.96-3.83L12 4.15z',
                 ],
-                ['name' => 'Promotion', 'route' => 'promotions.index', 'icon' => 'M5 5h10v10H5z'],
-                ['name' => 'Customer', 'route' => 'customers.index', 'icon' => 'M8 7a2 2 0 114 0 2 2 0 01-4 0z'],
-                ['name' => 'Tenant', 'route' => 'tenants.index', 'icon' => 'M5 7h10v3H5z'],
-                ['name' => 'Agent', 'route' => 'agents.index', 'icon' => 'M3 4h14v12H3z'],
-                ['name' => 'Subscription', 'route' => 'subscriptions.index', 'icon' => 'M6 2h8v4H6z'],
-                ['name' => 'Withdrawal', 'route' => 'withdrawals.index', 'icon' => 'M5 10h10v2H5z'],
-                ['name' => 'Payment', 'route' => 'payments.index', 'icon' => 'M5 6h10v2H5z'],
+                [
+                    'name' => 'Promotion',
+                    'route' => 'promotions.index',
+                    'icon' => 'M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z',
+                ],
+                [
+                    'name' => 'Customer',
+                    'route' => 'customers.index',
+                    'icon' =>
+                        'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
+                ],
             ];
         @endphp
 
@@ -60,7 +66,7 @@
             <a href="{{ route($item['route']) }}"
                 class="flex items-center px-4 py-3 rounded-lg transition {{ request()->routeIs($item['route']) ? 'bg-blue-50 text-[#034c8f] font-semibold' : 'text-gray-700 hover:bg-gray-100' }}"
                 style="{{ request()->routeIs($item['route']) ? 'border-left: 4px solid #034c8f;' : '' }}">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                     <path d="{{ $item['icon'] }}"></path>
                 </svg>
                 {{ $item['name'] }}
@@ -84,6 +90,42 @@
             Agent
         </a>
     @endif
+
+    <hr class="my-4">
+
+    @php
+        $pages = [
+            [
+                'name' => 'Subscription',
+                'route' => 'subscriptions.index',
+                'icon' =>
+                    'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-9-2l-4-4 1.41-1.41L10 15.17l6.59-6.59L18 10l-8 8z',
+            ],
+            [
+                'name' => 'Withdrawal',
+                'route' => 'withdrawals.index',
+                'icon' =>
+                    'M19 15v4H5v-4H3v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h-2zm-6-2.83l1.59-1.58L16 12l-4 4-4-4 1.41-1.41L11 12.17V3h2v9.17z',
+            ],
+            [
+                'name' => 'Payment',
+                'route' => 'payments.index',
+                'icon' =>
+                    'M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z',
+            ],
+        ];
+    @endphp
+
+    @foreach ($pages as $page)
+        <a href="{{ route($page['route']) }}"
+            class="flex items-center px-4 py-3 rounded-lg transition {{ request()->routeIs($page['route']) ? 'bg-blue-50 text-[#034c8f] font-semibold' : 'text-gray-700 hover:bg-gray-100' }}"
+            style="{{ request()->routeIs($page['route']) ? 'border-left: 4px solid #034c8f;' : '' }}">
+            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="{{ $page['icon'] }}"></path>
+            </svg>
+            {{ $page['name'] }}
+        </a>
+    @endforeach
 
     <hr class="my-4">
 

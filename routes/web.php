@@ -71,12 +71,13 @@ Route::middleware('auth')->group(function () {
 
         // Customer List
         Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+        Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+        Route::post('customers/{id}/restore', [CustomerController::class, 'restore'])->name('customers.restore');
+        Route::delete('customers/{id}/permanent-delete', [CustomerController::class, 'permanentDelete'])->name('customers.permanent-delete');
 
         // Tenant List
         Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');
-
-        // Agent List
-        Route::get('agents', [AgentController::class, 'index'])->name('agents.index');
 
         // Subscription List
         Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');

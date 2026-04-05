@@ -45,4 +45,9 @@ class Product extends Model
     {
         return $this->belongsToMany(Promotion::class, 'product_promotion', 'product_id', 'promotion_id')->withTimestamps();
     }
+
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Subscription::class, 'product_subscription', 'product_id', 'subscription_id')->withTimestamps();
+    }
 }

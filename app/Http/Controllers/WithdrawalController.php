@@ -5,15 +5,29 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreWithdrawalRequest;
 use App\Http\Requests\UpdateWithdrawalRequest;
 use App\Models\Withdrawal;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class WithdrawalController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $showDeleted = $request->boolean('show_deleted');
+
+        $query = Withdrawal::withCount(['agent', 'payments']);
+
+        if (!Auth::user()->is_employee) {
+            $this->middleware('agent');
+        }
+
+        $query = $showDeleted ? $query->onlyTrashed() : $query->whereNull('deleted_at');
+
+        $withdrawals = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return view('pages.withdrawal', compact('withdrawals', 'showDeleted'));
     }
 
     /**
