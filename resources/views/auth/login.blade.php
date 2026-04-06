@@ -157,6 +157,7 @@
 
             window.google.accounts.id.initialize({
                 client_id: '{{ config('services.google.client_id') }}',
+                client_secret: '{{ config('services.google.client_secret') }}',
                 callback: handleGoogleCredentialResponse,
             });
 
