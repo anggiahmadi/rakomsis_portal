@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum SubscriptionStatus: string
 {
-    case ACTIVE = 'active';
-    case CANCELLED = 'cancelled';
-    case EXPIRED = 'expired';
+    case Active = 'active';
+    case Cancelled = 'cancelled';
+    case Expired = 'expired';
 }

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignIdFor(Agent::class)->nullable()->constrained()->onDelete('set null'); // Optional agent associated with the subscription for commission tracking
             $table->foreignIdFor(Promotion::class)->nullable()->constrained()->onDelete('set null'); // Optional promotion applied to the subscription
             $table->string('code'); // Unique code for subscription identification and auto generation
+            $table->boolean('is_trial')->default(false); // Indicates if the subscription is a trial
             $table->string('customer_name'); // Name of the customer subscribing
             $table->string('customer_email'); // Email of the customer subscribing
             $table->string('price_type')->default('per_user'); // per_location or per_user
@@ -38,7 +39,7 @@ return new class extends Migration
             $table->double('subtotal')->default(0); // Subtotal before tax and discount (quantity * length_of_term * price)
             $table->double('total')->default(0); // Total price (quantity * length_of_term * [price + tax] - discount)
             $table->double('agent_commission')->default(0); // Commission earned by the agent for this subscription (commission_rate * subtotal)
-            $table->string('payment_status')->default('pending'); // pending, paid, failed, etc.
+            $table->string('payment_status')->default('not_paid'); // not_paid, pending, paid, failed, etc.
             $table->string('subscription_status')->default('active'); // active, cancelled, and expired.
             $table->timestamps();
             $table->softDeletes();

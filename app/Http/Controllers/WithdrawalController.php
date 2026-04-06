@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateWithdrawalRequest;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 
 class WithdrawalController extends Controller
 {
@@ -20,7 +21,13 @@ class WithdrawalController extends Controller
         $query = Withdrawal::withCount(['agent', 'payments']);
 
         if (!Auth::user()->is_employee) {
-            $this->middleware('agent');
+            if (Auth::user()->isAgent()) {
+                $query->whereHas('agent', function ($q) {
+                    $q->where('user_id', Auth::id());
+                });
+            } else {
+                return Redirect::route('dashboard')->with('error', 'Unauthorized access.');
+            }
         }
 
         $query = $showDeleted ? $query->onlyTrashed() : $query->whereNull('deleted_at');

@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Agent;
 use App\Models\Customer;
+use App\Models\Product;
 use App\Models\Subscription;
+use App\Models\Tenant;
+use App\Enums\ProductType;
 use App\Enums\PaymentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +24,11 @@ class DashboardController extends Controller
 
         // Get customer data
         $customer = Customer::where('user_id', $user->id)->first();
+        $customerTenants = $customer ? $customer->tenants()->orderBy('name')->get() : collect();
+        $trialProducts = Product::query()
+            ->where('product_type', ProductType::Bundle->value)
+            ->orderBy('name')
+            ->get();
 
         // Get tenants count
         $tenants_count = 0;
@@ -29,12 +37,11 @@ class DashboardController extends Controller
         }
 
         // Get unpaid subscriptions count
-        $unpaid_subscriptions = 0;
+        $total_subscription = 0;
+
         if ($customer) {
             $tenant_ids = $customer->tenants()->pluck('id');
-            $unpaid_subscriptions = Subscription::whereIn('tenant_id', $tenant_ids)
-                ->where('payment_status', PaymentStatus::Pending)
-                ->count();
+            $total_subscription = Subscription::whereIn('tenant_id', $tenant_ids)->count();
         }
 
         // Get agent data
@@ -42,8 +49,11 @@ class DashboardController extends Controller
 
         return view('dashboard.index', [
             'user' => $user,
+            'customer' => $customer,
+            'customerTenants' => $customerTenants,
+            'trialProducts' => $trialProducts,
             'tenants_count' => $tenants_count,
-            'unpaid_subscriptions' => $unpaid_subscriptions,
+            'total_subscription' => $total_subscription,
             'agent' => $agent,
         ]);
     }

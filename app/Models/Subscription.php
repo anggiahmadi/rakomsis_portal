@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\BillingCycle;
 use App\Enums\PaymentStatus;
 use App\Enums\SubscriptionStatus;
+use Google\Service\ServiceConsumerManagement\Billing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,6 +20,7 @@ class Subscription extends Model
         'agent_id',
         'promotion_id',
         'code',
+        'is_trial',
         'customer_name',
         'customer_email',
         'price_type',
@@ -39,6 +42,7 @@ class Subscription extends Model
     ];
 
     protected $casts = [
+        'is_trial' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
         'price' => 'double',
@@ -47,6 +51,7 @@ class Subscription extends Model
         'subtotal' => 'double',
         'total' => 'double',
         'agent_commission' => 'double',
+        'billing_cycle' => BillingCycle::class,
         'payment_status' => PaymentStatus::class,
         'subscription_status' => SubscriptionStatus::class
     ];

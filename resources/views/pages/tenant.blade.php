@@ -41,6 +41,17 @@
                 <h3 class="text-lg font-medium text-gray-900">
                     {{ $showDeleted ? 'Deleted Tenants' : 'Tenants' }} ({{ $tenants->total() }})
                 </h3>
+                @if (!Auth::user()->isAdmin() && !$showDeleted)
+                    <button type="button" onclick="openNewTenantModal()"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                            </path>
+                        </svg>
+                        New Tenant
+                    </button>
+                @endif
             </div>
 
             @if ($tenants->count() > 0)
@@ -55,9 +66,11 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Email</th>
+                                    Customers</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Phone</th>
+                                    Domain</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Address</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Created</th>
                             </tr>
@@ -69,7 +82,7 @@
                                         <div class="flex space-x-2">
                                             @if ($tenant->trashed())
                                                 <button type="button"
-                                                    onclick="restoreTenant({{ $tenant->id }}, @js($tenant->user->name))"
+                                                    onclick="restoreTenant({{ $tenant->id }}, @js($tenant->name))"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -81,7 +94,7 @@
                                                     Restore
                                                 </button>
                                                 <button type="button"
-                                                    onclick="permanentDeleteTenant({{ $tenant->id }}, @js($tenant->user->name))"
+                                                    onclick="permanentDeleteTenant({{ $tenant->id }}, @js($tenant->name))"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -93,6 +106,18 @@
                                                     Delete Permanently
                                                 </button>
                                             @else
+                                                <button type="button"
+                                                    onclick="inviteOtherCustomer({{ $tenant->id }}, @js($tenant->name))"
+                                                    class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                        </path>
+                                                    </svg>
+                                                    Invite Other Customer
+                                                </button>
                                                 <button type="button" onclick="viewTenant({{ $tenant->id }})"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -107,7 +132,7 @@
                                                     View
                                                 </button>
                                                 <button type="button"
-                                                    onclick="deleteTenant({{ $tenant->id }}, @js($tenant->user->name))"
+                                                    onclick="deleteTenant({{ $tenant->id }}, @js($tenant->name))"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -126,8 +151,8 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <div class="max-w-xs truncate {{ $tenant->trashed() ? 'line-through text-gray-400' : '' }}"
-                                            title="{{ $tenant->user->name }}">
-                                            {{ $tenant->user->name }}
+                                            title="{{ $tenant->name }}">
+                                            {{ $tenant->name }}
                                         </div>
                                         @if ($tenant->trashed())
                                             <span
@@ -137,10 +162,18 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $tenant->user->email }}
+                                        @foreach ($tenant->customers as $customer)
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mr-1 mb-1">
+                                                {{ $customer->user->name }}
+                                            </span>
+                                        @endforeach
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $tenant->user->phone }}
+                                        {{ $tenant->domain }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $tenant->address }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ $tenant->created_at->format('M d, Y H:i') }}
@@ -165,7 +198,8 @@
                 </div>
             @else
                 <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-5.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
                         </path>
@@ -188,6 +222,128 @@
                     @endif
                 </div>
             @endif
+        </div>
+    </div>
+
+    <!-- Invite Customer Modal -->
+    <div id="tenant-invite-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 sm:p-6 hidden">
+        <div
+            class="bg-white rounded-xl w-full max-w-lg shadow-2xl overflow-hidden border border-blue-700/20 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div class="px-5 py-3 bg-blue-700 text-white flex items-center justify-between">
+                <h3 class="text-base sm:text-lg font-bold">Invite Other Customer</h3>
+                <button onclick="closeModal('tenant-invite-modal')" class="text-white hover:text-slate-200">✕</button>
+            </div>
+
+            <form id="tenant-invite-form" class="p-6 space-y-4">
+                @csrf
+                <input type="hidden" id="tenant-invite-tenant-id" name="tenant_id">
+
+                <div>
+                    <label for="tenant-invite-tenant-name"
+                        class="block text-sm font-medium text-gray-700 mb-1">Tenant</label>
+                    <input type="text" id="tenant-invite-tenant-name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700" readonly>
+                </div>
+
+                <div>
+                    <label for="tenant-invite-email" class="block text-sm font-medium text-gray-700 mb-1">Customer
+                        Email</label>
+                    <input type="email" id="tenant-invite-email" name="email"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter registered customer email" required>
+                </div>
+
+                <div>
+                    <label for="tenant-invite-role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <select id="tenant-invite-role" name="role"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="owner">Owner</option>
+                    </select>
+                </div>
+            </form>
+
+            <div class="px-6 py-4 border-t border-gray-200 flex gap-2 justify-end">
+                <button onclick="closeModal('tenant-invite-modal')"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button onclick="submitTenantInviteForm()"
+                    class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
+                    Send Invite
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Tenant Modal -->
+    <div id="tenant-create-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 sm:p-6 hidden">
+        <div
+            class="bg-white rounded-xl w-full max-w-xl sm:max-w-2xl shadow-2xl overflow-hidden border border-blue-700/20 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div class="px-5 py-3 bg-blue-700 text-white flex items-center justify-between">
+                <h3 class="text-base sm:text-lg font-bold">Create New Tenant</h3>
+                <button onclick="closeModal('tenant-create-modal')" class="text-white hover:text-slate-200">✕</button>
+            </div>
+
+            <form id="tenant-create-form" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label for="tenant-code" class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+                    <input type="text" id="tenant-code" name="code"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter tenant code" required>
+                </div>
+
+                <div>
+                    <label for="tenant-name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input type="text" id="tenant-name" name="name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter tenant name" required>
+                </div>
+
+                <div>
+                    <label for="tenant-domain" class="block text-sm font-medium text-gray-700 mb-1">Domain</label>
+                    <input type="text" id="tenant-domain" name="domain"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter tenant domain" required>
+                </div>
+
+                <div>
+                    <label for="tenant-address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea id="tenant-address" name="address" rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter tenant address"></textarea>
+                </div>
+
+                <div>
+                    <label for="tenant-business-type" class="block text-sm font-medium text-gray-700 mb-1">Business
+                        Type</label>
+                    <select id="tenant-business-type" name="business_type"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select business type</option>
+                        <option value="education">Education</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="retail">Retail</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="services">Services</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </form>
+
+            <div class="px-6 py-4 border-t border-gray-200 flex gap-2 justify-end">
+                <button onclick="closeModal('tenant-create-modal')"
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button onclick="submitCreateTenantForm()"
+                    class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
+                    Create Tenant
+                </button>
+            </div>
         </div>
     </div>
 
@@ -293,8 +449,90 @@
             setTenantViewTab('details');
         }
 
+        function openNewTenantModal() {
+            document.getElementById('tenant-create-form').reset();
+            document.getElementById('tenant-create-modal').classList.remove('hidden');
+        }
+
+        function inviteOtherCustomer(tenantId, tenantName) {
+            document.getElementById('tenant-invite-form').reset();
+            document.getElementById('tenant-invite-tenant-id').value = tenantId;
+            document.getElementById('tenant-invite-tenant-name').value = tenantName || '-';
+            document.getElementById('tenant-invite-modal').classList.remove('hidden');
+        }
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function resetCreateTenantForm() {
+            document.getElementById('tenant-create-form').reset();
+        }
+
+        async function submitTenantInviteForm() {
+            const tenantId = document.getElementById('tenant-invite-tenant-id').value;
+            const email = document.getElementById('tenant-invite-email').value;
+            const role = document.getElementById('tenant-invite-role').value;
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch(`{{ url('tenants') }}/${tenantId}/invite-customer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        role,
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw result;
+                }
+
+                alert(result.message || 'Customer invited successfully.');
+                closeModal('tenant-invite-modal');
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to invite customer.');
+            }
+        }
+
+        async function submitCreateTenantForm() {
+            const form = document.getElementById('tenant-create-form');
+            const formData = new FormData(form);
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch('{{ route('tenants.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw result;
+                }
+
+                alert(result.message || 'Tenant created successfully.');
+                closeModal('tenant-create-modal');
+                resetCreateTenantForm();
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to create tenant.');
+            }
         }
 
         function renderTenantView(data) {
@@ -473,6 +711,8 @@
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeModal('tenant-view-modal');
+                closeModal('tenant-create-modal');
+                closeModal('tenant-invite-modal');
             }
         });
     </script>

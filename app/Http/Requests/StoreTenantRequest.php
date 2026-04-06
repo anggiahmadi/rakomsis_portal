@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreTenantRequest extends FormRequest
 {
@@ -12,7 +13,7 @@ class StoreTenantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return Auth::check() && !Auth::user()->is_employee;
     }
 
     /**
@@ -23,7 +24,11 @@ class StoreTenantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'code' => 'required|string|unique:tenants,code|max:50',
+            'name' => 'required|string|max:255',
+            'domain' => 'required|string|unique:tenants,domain|max:255',
+            'address' => 'nullable|string|max:500',
+            'business_type' => 'nullable|string|max:50',
         ];
     }
 }

@@ -99,11 +99,11 @@ class AgentController extends Controller
                     'message' => 'You are already registered as an agent.'
                 ], 400);
             }
-            return Redirect::route('dashboard')->with('error', 'You are already registered as an agent.');
+            return Redirect::route('dashboard.agent')->with('error', 'You are already registered as an agent.');
         }
 
         // Generate unique agent code
-        $agentCode = 'AGT-' . Auth::id() . '-' . time();
+        $agentCode = random_int(1000, 9999) . time();
 
         // Create agent record
         $agent = Agent::create([
@@ -124,7 +124,7 @@ class AgentController extends Controller
             ], 201);
         }
 
-        return Redirect::route('dashboard')->with('success', 'Congratulations! You are now a Bronze agent.');
+        return Redirect::route('dashboard.agent')->with('success', 'Congratulations! You are now a Bronze agent.');
     }
 
     /**

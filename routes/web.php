@@ -45,10 +45,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('customer')->group(function () {
         // Dashboard Routes - Available to all authenticated users
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/profile', [DashboardController::class, 'profile'])->name('dashboard.profile');
-        Route::put('/dashboard/profile', [DashboardController::class, 'updateProfile'])->name('dashboard.profile.update');
-        Route::get('/dashboard/settings', [DashboardController::class, 'settings'])->name('dashboard.settings');
-        Route::put('/dashboard/settings', [DashboardController::class, 'updateSettings'])->name('dashboard.settings.update');
+
+        // Start Free Trial Route - Available to all authenticated users
+        Route::post('/subscriptions/free-trial', [SubscriptionController::class, 'startTrial'])->name('dashboard.trial.start');
 
         // Agent Registration Routes - Available to all authenticated users
         Route::get('/agent/create', [AgentController::class, 'create'])->name('agent.create');
@@ -75,21 +74,34 @@ Route::middleware('auth')->group(function () {
         Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
         Route::post('customers/{id}/restore', [CustomerController::class, 'restore'])->name('customers.restore');
         Route::delete('customers/{id}/permanent-delete', [CustomerController::class, 'permanentDelete'])->name('customers.permanent-delete');
-
-        // Tenant List
-        Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');
-
-        // Subscription List
-        Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
-
-        // Withdrawal List
-        Route::get('withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
-        Route::post('withdrawals/{withdrawal}/respond', [WithdrawalController::class, 'respond'])->name('withdrawals.respond');
-
-        // Payment List
-        Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     });
 
+    Route::get('/dashboard/profile', [DashboardController::class, 'profile'])->name('dashboard.profile');
+    Route::put('/dashboard/profile', [DashboardController::class, 'updateProfile'])->name('dashboard.profile.update');
+    Route::get('/dashboard/settings', [DashboardController::class, 'settings'])->name('dashboard.settings');
+    Route::put('/dashboard/settings', [DashboardController::class, 'updateSettings'])->name('dashboard.settings.update');
+    // Tenant List
+    Route::get('tenants', [TenantController::class, 'index'])->name('tenants.index');
+    Route::post('tenants', [TenantController::class, 'store'])->name('tenants.store');
+    Route::get('tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
+    Route::post('tenants/{tenant}/invite-customer', [TenantController::class, 'inviteCustomer'])->name('tenants.invite-customer');
+    Route::delete('tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+    Route::post('tenants/{tenant}/restore', [TenantController::class, 'restore'])->name('tenants.restore');
+    Route::delete('tenants/{tenant}/permanent-delete', [TenantController::class, 'permanentDelete'])->name('tenants.permanent-delete');
+
+    // Subscription List
+    Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::get('subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
+    Route::put('subscriptions/{subscription}', [SubscriptionController::class, 'update'])->name('subscriptions.update');
+    Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+
+    // Withdrawal List
+    Route::get('withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::post('withdrawals/{withdrawal}/respond', [WithdrawalController::class, 'respond'])->name('withdrawals.respond');
+
+    // Payment List
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     // Logout
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 });
