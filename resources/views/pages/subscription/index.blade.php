@@ -42,7 +42,7 @@
                     {{ $showDeleted ? 'Deleted Subscriptions' : 'Subscriptions' }} ({{ $subscriptions->total() }})
                 </h3>
                 @unless ($showDeleted && !Auth::user()->isAdmin())
-                    <button type="button" onclick="openNewSubscriptionModal()"
+                    <a href="{{ route('subscriptions.create') }}"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -50,7 +50,7 @@
                             </path>
                         </svg>
                         New Subscription
-                    </button>
+                    </a>
                 @endunless
             </div>
             @if (!$isEmployee)
@@ -185,8 +185,7 @@
                                                 @endif
 
                                                 @if (!$subscription->is_trial && $subscription->subscription_status === \App\Enums\SubscriptionStatus::Expired)
-                                                    <button type="button"
-                                                        onclick="renewSubscription({{ $subscription->id }}, @js($subscription->tenant->name ?? ($subscription->customer_name ?? 'Subscription')))"
+                                                    <a href="{{ route('subscriptions.create', ['renew_from' => $subscription->id]) }}"
                                                         class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
@@ -196,7 +195,7 @@
                                                             </path>
                                                         </svg>
                                                         Renew Subscription
-                                                    </button>
+                                                    </a>
                                                 @endif
                                             @endif
                                         </div>

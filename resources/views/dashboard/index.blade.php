@@ -17,16 +17,18 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Active Tenants</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">
+                        <p class="text-2xl font-bold text-gray-900 mt-1 leading-tight">
                             @if ($tenants_count > 0)
                                 {{ $tenants_count }}
                             @else
-                                <button type="button" id="trial-tenants-btn" class="px-3 py-1 text-sm rounded text-white"
+                                <a href="{{ route('dashboard.free-trial') }}"
+                                    class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg text-white font-semibold"
                                     style="background-color: #034c8f;">
-                                    Try now !!!
-                                </button>
+                                    Start Free Trial
+                                </a>
                             @endif
                         </p>
+                        <p class="text-xs text-gray-500 mt-2">Manage your tenants and launch your first workspace.</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-[#034c8f]" fill="currentColor" viewBox="0 0 20 20">
@@ -43,17 +45,20 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Subscription</p>
-                        <p class="text-1xl font-bold text-gray-900 mt-1">
+                        <p class="text-lg font-bold text-gray-900 mt-1 leading-tight">
                             @if ($total_subscription > 0)
-                                <a href="{{ route('subscriptions.index') }}">{{ $total_subscription }} Active
+                                <a href="{{ route('subscriptions.index') }}"
+                                    class="hover:text-[#00a8e3]">{{ $total_subscription }} Active
                                     Subscription(s)</a>
                             @else
-                                <button type="button" id="trial-subscription-btn"
-                                    class="px-3 py-1 text-sm rounded text-white" style="background-color: #00a8e3;">
-                                    Try now !!!
-                                </button>
+                                <a href="{{ route('dashboard.free-trial') }}"
+                                    class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg text-white font-semibold"
+                                    style="background-color: #00a8e3;">
+                                    Start Free Trial
+                                </a>
                             @endif
                         </p>
+                        <p class="text-xs text-gray-500 mt-2">Track active plans and billing cycle status.</p>
                     </div>
                     <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-[#00a8e3]" fill="currentColor" viewBox="0 0 20 20">
@@ -76,7 +81,7 @@
                             @else
                                 <button type="button" id="agent-commission-btn"
                                     class="px-3 py-1 text-sm rounded text-white" style="background-color: #7a8b9c;">
-                                    Became an agent
+                                    Become an Agent
                                 </button>
                             @endif
                         </p>
@@ -102,7 +107,7 @@
                             @else
                                 <button type="button" id="agent-balance-btn" class="px-3 py-1 text-sm rounded text-white"
                                     style="background-color: #323F4C;">
-                                    Became an agent
+                                    Become an Agent
                                 </button>
                             @endif
                         </p>
@@ -197,180 +202,32 @@
         </div>
     </div>
 
-    <!-- Trial Modal (Tenants & Subscription) -->
-    <div id="trial-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 hidden">
-        <div class="bg-white rounded-xl w-full max-w-lg shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">Free Trial - 1 Month SaaS Access</h3>
-                <button id="close-trial-modal" class="text-gray-500 hover:text-gray-800">✕</button>
-            </div>
-            <form method="POST" action="{{ route('dashboard.trial.start') }}" id="trial-form">
-                @csrf
-                <input type="hidden" name="trial_target" id="trial-target" value="tenants">
-
-                <div class="p-6 text-sm text-gray-700 space-y-4">
-                    <div class="rounded-lg bg-blue-50 border border-blue-100 p-4 text-blue-900">
-                        <p class="font-semibold">Free Trial</p>
-                        <p class="mt-1 text-sm text-blue-800">Start a 1-month trial by choosing a tenant, product, and
-                            start date.</p>
-                    </div>
-
-                    @if ($customer && $customerTenants->isNotEmpty())
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-800 mb-2">Tenant Option</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label
-                                    class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-3 cursor-pointer">
-                                    <input type="radio" name="tenant_mode" value="existing" checked
-                                        class="text-[#034c8f] focus:ring-[#034c8f]">
-                                    <span>Use Existing Tenant</span>
-                                </label>
-                                <label
-                                    class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-3 cursor-pointer">
-                                    <input type="radio" name="tenant_mode" value="new"
-                                        class="text-[#034c8f] focus:ring-[#034c8f]">
-                                    <span>Create New Tenant</span>
-                                </label>
-                            </div>
-                        </div>
-                    @else
-                        <input type="hidden" name="tenant_mode" value="new">
-                        <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-800">
-                            You do not have a tenant yet. Create one first to start your free trial.
-                        </div>
-                    @endif
-
-                    <div id="trial-existing-tenant-section"
-                        class="space-y-2 {{ !$customer || $customerTenants->isEmpty() ? 'hidden' : '' }}">
-                        <label for="trial-tenant-id" class="block text-sm font-semibold text-gray-800">Select
-                            Tenant</label>
-                        <select name="tenant_id" id="trial-tenant-id"
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Choose your tenant</option>
-                            @foreach ($customerTenants as $tenant)
-                                <option value="{{ $tenant->id }}">{{ $tenant->name }} ({{ $tenant->domain }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div id="trial-new-tenant-section"
-                        class="space-y-4 {{ $customer && $customerTenants->isNotEmpty() ? 'hidden' : '' }}">
-                        <div>
-                            <label for="trial-tenant-name" class="block text-sm font-semibold text-gray-800 mb-1">Tenant
-                                Name</label>
-                            <input type="text" name="tenant_name" id="trial-tenant-name"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="My School / My Business">
-                        </div>
-                        <div>
-                            <label for="trial-tenant-domain" class="block text-sm font-semibold text-gray-800 mb-1">Tenant
-                                Domain</label>
-                            <input type="text" name="tenant_domain" id="trial-tenant-domain"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="my-tenant.rakomsis.com">
-                        </div>
-                        <div>
-                            <label for="trial-tenant-address"
-                                class="block text-sm font-semibold text-gray-800 mb-1">Address</label>
-                            <input type="text" name="tenant_address" id="trial-tenant-address"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Tenant address">
-                        </div>
-                        <div>
-                            <label for="trial-tenant-business-type"
-                                class="block text-sm font-semibold text-gray-800 mb-1">Business Type</label>
-                            <input type="text" name="tenant_business_type" id="trial-tenant-business-type"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="School, Retail, Services, etc.">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="trial-product-id" class="block text-sm font-semibold text-gray-800 mb-1">Select
-                            Product for Trial</label>
-                        <input type="text" id="trial-product-search"
-                            placeholder="Search bundle products by name or billing cycle..."
-                            class="w-full mb-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <select name="product_id" id="trial-product-id" required
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Choose a bundle product</option>
-                            @foreach ($trialProducts as $product)
-                                <option value="{{ $product->id }}">
-                                    {{ $product->name }} - {{ $product->billing_cycle->label() }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="trial-start-date" class="block text-sm font-semibold text-gray-800 mb-1">Trial Start
-                            Date</label>
-                        <input type="date" name="start_date" id="trial-start-date" min="{{ now()->toDateString() }}"
-                            required value="{{ now()->toDateString() }}"
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-
-                <div class="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
-                    <button type="button" id="cancel-trial-modal"
-                        class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">Cancel</button>
-                    <button type="submit" id="continue-trial-modal"
-                        class="px-4 py-2 rounded-lg text-white font-semibold" style="background-color: #034c8f;">Start
-                        Free Trial</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Agent Modal (Commission & Balance) -->
+    <!-- Agent Info Modal -->
     <div id="agent-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 hidden">
-        <div class="bg-white rounded-xl w-full max-w-lg shadow-lg overflow-hidden max-h-96 overflow-y-auto">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-                <h3 class="text-lg font-semibold text-gray-900">Become an Agent - Benefits Breakdown</h3>
+        <div class="bg-white rounded-xl w-full max-w-md shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Become an Agent</h3>
                 <button id="close-agent-modal" class="text-gray-500 hover:text-gray-800">✕</button>
             </div>
+
             <div class="p-6 text-sm text-gray-700 space-y-4">
-                <!-- Bronze Level -->
-                <div class="border-l-4 pl-4" style="border-left-color: #CD7F32;">
-                    <p class="font-semibold text-gray-900">🥉 Bronze Level (Start Here)</p>
-                    <p class="text-gray-600 mt-1">Entry-level agent membership available to all users.</p>
-                    <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-600">
-                        <li><strong>Commission Rate:</strong> 2% on all referred sales</li>
-                        <li><strong>Customer Discount:</strong> 5% discount for your referrals</li>
-                        <li><strong>Support:</strong> Basic support and promotional materials</li>
-                        <li><strong>Requirement:</strong> No sales threshold required</li>
-                    </ul>
-                </div>
-
-                <!-- Silver Level -->
-                <div class="border-l-4 pl-4" style="border-left-color: #C0C0C0;">
-                    <p class="font-semibold text-gray-900">🥈 Silver Level</p>
-                    <p class="text-gray-600 mt-1">Upgrade after achieving IDR 100,000,000 in sales.</p>
-                    <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-600">
-                        <li><strong>Commission Rate:</strong> 5% on all referred sales</li>
-                        <li><strong>Customer Discount:</strong> 10% discount for your referrals</li>
-                        <li><strong>Support:</strong> Priority support + exclusive promotions</li>
-                        <li><strong>Requirement:</strong> IDR 100,000,000 total sales</li>
-                    </ul>
-                </div>
-
-                <!-- Gold Level -->
-                <div class="border-l-4 pl-4" style="border-left-color: #FFD700;">
-                    <p class="font-semibold text-gray-900">🥇 Gold Level</p>
-                    <p class="text-gray-600 mt-1">Premium agent status with IDR 1,000,000,000+ in sales.</p>
-                    <ul class="list-disc pl-5 mt-2 space-y-1 text-gray-600">
-                        <li><strong>Commission Rate:</strong> 10% on all referred sales</li>
-                        <li><strong>Customer Discount:</strong> 15% discount for your referrals</li>
-                        <li><strong>Support:</strong> Dedicated account management + early access</li>
-                        <li><strong>Requirement:</strong> IDR 1,000,000,000 total sales</li>
-                    </ul>
-                </div>
+                <p>Join our agent program and unlock extra benefits for your referrals.</p>
+                <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                    <li>Start at <strong>Bronze level</strong></li>
+                    <li>Earn commission from referred subscriptions</li>
+                    <li>Get customer discount support</li>
+                </ul>
             </div>
-            <div class="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end sticky bottom-0 bg-white">
+
+            <div class="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
                 <button id="cancel-agent-modal"
-                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">Cancel</button>
+                    class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">
+                    Cancel
+                </button>
                 <button id="continue-agent-modal" class="px-4 py-2 rounded-lg text-white font-semibold"
-                    style="background-color: #034c8f;">Continue to be an Agent</button>
+                    style="background-color: #034c8f;">
+                    Continue
+                </button>
             </div>
         </div>
     </div>
@@ -400,97 +257,6 @@
     </div>
 
     <script>
-        // Trial Modal Handlers
-        function openTrialModal(target) {
-            document.getElementById('trial-target').value = target;
-            const productSearch = document.getElementById('trial-product-search');
-            if (productSearch) {
-                productSearch.value = '';
-            }
-            filterTrialProductOptions();
-            document.getElementById('trial-modal').classList.remove('hidden');
-        }
-
-        function filterTrialProductOptions() {
-            const searchInput = document.getElementById('trial-product-search');
-            const select = document.getElementById('trial-product-id');
-
-            if (!searchInput || !select) {
-                return;
-            }
-
-            const keyword = searchInput.value.trim().toLowerCase();
-            Array.from(select.options).forEach((option, index) => {
-                if (index === 0) {
-                    option.hidden = false;
-                    return;
-                }
-
-                option.hidden = keyword !== '' && !option.text.toLowerCase().includes(keyword);
-            });
-
-            if (select.selectedOptions.length > 0 && select.selectedOptions[0].hidden) {
-                select.value = '';
-            }
-        }
-
-        document.getElementById('trial-tenants-btn')?.addEventListener('click', function() {
-            openTrialModal('tenants');
-        });
-
-        document.getElementById('trial-subscription-btn')?.addEventListener('click', function() {
-            openTrialModal('subscription');
-        });
-
-        document.getElementById('close-trial-modal').addEventListener('click', function() {
-            document.getElementById('trial-modal').classList.add('hidden');
-        });
-
-        document.getElementById('cancel-trial-modal').addEventListener('click', function() {
-            document.getElementById('trial-modal').classList.add('hidden');
-        });
-
-        document.getElementById('trial-product-search').addEventListener('input', function() {
-            filterTrialProductOptions();
-        });
-
-        function syncTrialTenantMode() {
-            const selectedMode = document.querySelector('input[name="tenant_mode"]:checked')?.value || 'new';
-            const existingSection = document.getElementById('trial-existing-tenant-section');
-            const newSection = document.getElementById('trial-new-tenant-section');
-            const existingSelect = document.getElementById('trial-tenant-id');
-            const newInputs = [
-                document.getElementById('trial-tenant-name'),
-                document.getElementById('trial-tenant-domain'),
-                document.getElementById('trial-tenant-address'),
-                document.getElementById('trial-tenant-business-type'),
-            ];
-
-            if (existingSection) {
-                existingSection.classList.toggle('hidden', selectedMode !== 'existing');
-            }
-
-            if (newSection) {
-                newSection.classList.toggle('hidden', selectedMode !== 'new');
-            }
-
-            if (existingSelect) {
-                existingSelect.disabled = selectedMode !== 'existing';
-            }
-
-            newInputs.forEach(input => {
-                if (input) {
-                    input.disabled = selectedMode !== 'new';
-                }
-            });
-        }
-
-        document.querySelectorAll('input[name="tenant_mode"]').forEach(radio => {
-            radio.addEventListener('change', syncTrialTenantMode);
-        });
-
-        syncTrialTenantMode();
-
         // Agent Modal Handlers
         document.getElementById('agent-commission-btn')?.addEventListener('click', function() {
             document.getElementById('agent-modal').classList.remove('hidden');

@@ -46,7 +46,24 @@ class TenantController extends Controller
      */
     public function store(StoreTenantRequest $request)
     {
-        $tenant = Tenant::create($request->validated());
+        $validated = $request->validated();
+
+        $domainPrefix = strtolower(trim((string) $validated['domain']));
+        $fullDomain = $domainPrefix . '.rakomsis.com';
+
+        $isDomainTaken = Tenant::query()->where('domain', $fullDomain)->exists();
+        if ($isDomainTaken) {
+            return response()->json([
+                'message' => 'Validation error.',
+                'errors' => [
+                    'domain' => ['This domain is already in use. Please choose another subdomain.'],
+                ],
+            ], 422);
+        }
+
+        $validated['domain'] = $fullDomain;
+
+        $tenant = Tenant::create($validated);
 
         // Attach the currently logged-in customer as owner of this tenant
         $customer = auth()->user()->customer;

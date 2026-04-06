@@ -26,7 +26,7 @@ class StoreTenantRequest extends FormRequest
         return [
             'code' => 'required|string|unique:tenants,code|max:50',
             'name' => 'required|string|max:255',
-            'domain' => 'required|string|unique:tenants,domain|max:255',
+            'domain' => 'required|string|max:63|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
             'address' => 'nullable|string|max:500',
             'business_type' => 'nullable|string|max:50',
         ];

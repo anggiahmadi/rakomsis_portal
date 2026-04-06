@@ -55,7 +55,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Start Free Trial Route - Available to all authenticated users
-        Route::post('/subscriptions/free-trial', [SubscriptionController::class, 'startTrial'])->name('dashboard.trial.start');
+        Route::get('/free-trial', [DashboardController::class, 'freeTrial'])->name('dashboard.free-trial');
+        Route::post('/start-trial', [DashboardController::class, 'startTrial'])->name('dashboard.trial.start');
 
         // Agent Registration Routes - Available to all authenticated users
         Route::get('/agent/create', [AgentController::class, 'create'])->name('agent.create');
@@ -99,6 +100,7 @@ Route::middleware('auth')->group(function () {
 
     // Subscription List
     Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('subscriptions/create', [SubscriptionController::class, 'create'])->name('subscriptions.create');
     Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
     Route::get('subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
     Route::put('subscriptions/{subscription}', [SubscriptionController::class, 'update'])->name('subscriptions.update');

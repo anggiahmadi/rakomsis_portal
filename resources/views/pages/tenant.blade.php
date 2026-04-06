@@ -64,6 +64,8 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Code</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Has Active Subscription</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Customers</th>
@@ -148,6 +150,18 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $tenant->code }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        @foreach ($tenant->subscriptions as $subscription)
+                                            @if ($subscription->subscription_status === 'active')
+                                                <a href="{{ route('subscription') }}"
+                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 mr-1 mb-1">
+                                                    {{ $subscription->code }} -
+                                                    {{ $subscription->product()->pluck('name')->join(', ') }}
+                                                </a>
+                                                @break
+                                            @endif
+                                        @endforeach
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <div class="max-w-xs truncate {{ $tenant->trashed() ? 'line-through text-gray-400' : '' }}"
@@ -295,6 +309,7 @@
                     <input type="text" id="tenant-code" name="code"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter tenant code" required>
+                    <p id="tenant-code-error" class="mt-1 text-sm text-red-600 hidden"></p>
                 </div>
 
                 <div>
@@ -302,13 +317,21 @@
                     <input type="text" id="tenant-name" name="name"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter tenant name" required>
+                    <p id="tenant-name-error" class="mt-1 text-sm text-red-600 hidden"></p>
                 </div>
 
                 <div>
                     <label for="tenant-domain" class="block text-sm font-medium text-gray-700 mb-1">Domain</label>
-                    <input type="text" id="tenant-domain" name="domain"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter tenant domain" required>
+                    <div
+                        class="flex items-center rounded-md shadow-sm border border-gray-300 focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
+                        <input type="text" id="tenant-domain" name="domain"
+                            class="w-full border-0 rounded-l-md px-3 py-2 focus:ring-0" placeholder="your-domain"
+                            autocomplete="off" required>
+                        <span class="px-3 text-sm text-gray-500 border-l border-gray-200">.rakomsis.com</span>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Preview: <span
+                            id="tenant-domain-preview">your-domain.rakomsis.com</span></p>
+                    <p id="tenant-domain-error" class="mt-1 text-sm text-red-600 hidden"></p>
                 </div>
 
                 <div>
@@ -316,6 +339,7 @@
                     <textarea id="tenant-address" name="address" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter tenant address"></textarea>
+                    <p id="tenant-address-error" class="mt-1 text-sm text-red-600 hidden"></p>
                 </div>
 
                 <div>
@@ -331,6 +355,7 @@
                         <option value="services">Services</option>
                         <option value="other">Other</option>
                     </select>
+                    <p id="tenant-business-type-error" class="mt-1 text-sm text-red-600 hidden"></p>
                 </div>
             </form>
 
@@ -451,6 +476,8 @@
 
         function openNewTenantModal() {
             document.getElementById('tenant-create-form').reset();
+            clearTenantCreateErrors();
+            updateTenantDomainPreview();
             document.getElementById('tenant-create-modal').classList.remove('hidden');
         }
 
@@ -467,6 +494,72 @@
 
         function resetCreateTenantForm() {
             document.getElementById('tenant-create-form').reset();
+            clearTenantCreateErrors();
+            updateTenantDomainPreview();
+        }
+
+        function updateTenantDomainPreview() {
+            const domainInput = document.getElementById('tenant-domain');
+            const preview = document.getElementById('tenant-domain-preview');
+
+            if (!domainInput || !preview) {
+                return;
+            }
+
+            const cleaned = String(domainInput.value || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9-]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+
+            if (domainInput.value !== cleaned) {
+                domainInput.value = cleaned;
+            }
+
+            preview.textContent = cleaned ? `${cleaned}.rakomsis.com` : 'your-domain.rakomsis.com';
+        }
+
+        function clearTenantCreateErrors() {
+            const fields = ['code', 'name', 'domain', 'address', 'business-type'];
+
+            fields.forEach(field => {
+                const inputId = `tenant-${field}`;
+                const errorId = `tenant-${field}-error`;
+                const input = document.getElementById(inputId);
+                const error = document.getElementById(errorId);
+
+                if (input) {
+                    input.classList.remove('border-red-400');
+                }
+
+                if (error) {
+                    error.textContent = '';
+                    error.classList.add('hidden');
+                }
+            });
+        }
+
+        function setTenantCreateFieldError(field, message) {
+            const fieldMap = {
+                code: 'code',
+                name: 'name',
+                domain: 'domain',
+                address: 'address',
+                business_type: 'business-type',
+            };
+
+            const key = fieldMap[field] || field;
+            const input = document.getElementById(`tenant-${key}`);
+            const error = document.getElementById(`tenant-${key}-error`);
+
+            if (input) {
+                input.classList.add('border-red-400');
+            }
+
+            if (error) {
+                error.textContent = message;
+                error.classList.remove('hidden');
+            }
         }
 
         async function submitTenantInviteForm() {
@@ -509,6 +602,8 @@
             const formData = new FormData(form);
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+            clearTenantCreateErrors();
+
             try {
                 const response = await fetch('{{ route('tenants.store') }}', {
                     method: 'POST',
@@ -522,6 +617,12 @@
                 const result = await response.json();
 
                 if (!response.ok) {
+                    if (response.status === 422 && result.errors) {
+                        Object.entries(result.errors).forEach(([field, messages]) => {
+                            const firstMessage = Array.isArray(messages) ? messages[0] : messages;
+                            setTenantCreateFieldError(field, firstMessage);
+                        });
+                    }
                     throw result;
                 }
 
@@ -534,6 +635,10 @@
                 alert(error.message || 'Failed to create tenant.');
             }
         }
+
+        document.getElementById('tenant-domain')?.addEventListener('input', function() {
+            updateTenantDomainPreview();
+        });
 
         function renderTenantView(data) {
             var tenant = data.tenant

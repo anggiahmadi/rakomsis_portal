@@ -91,13 +91,76 @@ class SubscriptionController extends Controller
                 'end_date',
             ]);
 
-        return view('pages.subscription', compact(
+        return view('pages.subscription.index', compact(
             'subscriptions',
             'showDeleted',
             'isEmployee',
             'availableTenants',
             'availableProducts',
             'availablePromotions'
+        ));
+    }
+
+    public function create(Request $request)
+    {
+        $isEmployee = (bool) Auth::user()->is_employee;
+
+        $availableTenants = $isEmployee
+            ? Tenant::query()->orderBy('name')->get(['id', 'code', 'name', 'domain'])
+            : Auth::user()->customer?->tenants()->orderBy('name')->get(['tenants.id', 'tenants.code', 'tenants.name', 'tenants.domain']);
+
+        $availableProducts = Product::query()->where('product_type', ProductType::Bundle->value)
+            ->orderBy('name')
+            ->get(['id', 'code', 'name', 'price_per_user', 'price_per_location', 'tax_percentage', 'billing_cycle']);
+
+        $availablePromotions = Promotion::query()
+            ->with('products:id')
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->orderBy('name')
+            ->get([
+                'id',
+                'code',
+                'name',
+                'promotion_rules',
+                'billing_cycle',
+                'specific_length_of_term',
+                'discount_type',
+                'discount_value',
+                'has_specific_product',
+                'start_date',
+                'end_date',
+            ]);
+
+        $renewSubscription = null;
+        $renewFromId = (int) $request->query('renew_from', 0);
+
+        if ($renewFromId > 0) {
+            $renewSubscription = Subscription::with([
+                'tenant' => function ($q) {
+                    $q->withTrashed();
+                },
+                'products',
+                'promotion',
+            ])->findOrFail($renewFromId);
+
+            if (! Auth::user()->is_employee) {
+                $isRelated = $renewSubscription->tenant
+                    ? $renewSubscription->tenant->customers()->where('user_id', Auth::id())->exists()
+                    : false;
+
+                if (! $isRelated) {
+                    return Redirect::route('subscriptions.index')->with('error', 'Unauthorized access to renewal operation.');
+                }
+            }
+        }
+
+        return view('pages.subscription.form', compact(
+            'isEmployee',
+            'availableTenants',
+            'availableProducts',
+            'availablePromotions',
+            'renewSubscription'
         ));
     }
 
@@ -180,7 +243,9 @@ class SubscriptionController extends Controller
         ]);
 
         if (! $this->userCanAccessTenant((int) $validated['tenant_id'])) {
-            return Redirect::route('subscriptions.index')->with('error', 'Selected tenant does not belong to your account.');
+            return Redirect::back()->withInput()->withErrors([
+                'tenant_id' => 'Selected tenant does not belong to your account.',
+            ]);
         }
 
         $createdSubscription = $this->createSubscriptionFromRequest(
@@ -229,7 +294,9 @@ class SubscriptionController extends Controller
         ]);
 
         if (! $this->userCanAccessTenant((int) $validated['tenant_id'])) {
-            return Redirect::route('subscriptions.index')->with('error', 'Selected tenant does not belong to your account.');
+            return Redirect::back()->withInput()->withErrors([
+                'tenant_id' => 'Selected tenant does not belong to your account.',
+            ]);
         }
 
         $renewedSubscription = $this->createSubscriptionFromRequest(
@@ -243,6 +310,9 @@ class SubscriptionController extends Controller
             ->with('success', 'Subscription renewed successfully. New code: ' . $renewedSubscription->code);
     }
 
+    /**
+     * Verify if the user can access the specified tenant.
+     */
     private function userCanAccessTenant(int $tenantId): bool
     {
         if ((bool) Auth::user()->is_employee) {
@@ -252,6 +322,9 @@ class SubscriptionController extends Controller
         return Auth::user()->customer?->tenants()->where('tenants.id', $tenantId)->exists() ?? false;
     }
 
+    /**
+     * Create a new subscription from the request data.
+     */
     private function createSubscriptionFromRequest(array $validated, int $tenantId, ?int $agentId = null, ?bool $isTrial = false): Subscription
     {
         $user = Auth::user();
@@ -367,6 +440,9 @@ class SubscriptionController extends Controller
         });
     }
 
+     /**
+     * Resolve the available promotion based on the reference code, billing cycle, length of term, and product IDs.
+     */
     private function resolveAvailablePromotion(string $referenceCode, string $billingCycle, int $lengthOfTerm, array $productIds): ?Promotion
     {
         $code = trim($referenceCode);
@@ -414,102 +490,5 @@ class SubscriptionController extends Controller
         }
 
         return $promotion;
-    }
-
-    /**
-     * Show the form for creating a new start trial.
-     */
-    public function startTrial(Request $request)
-    {
-        $user = Auth::user();
-
-        $customer = Customer::where('user_id', $user->id)->firstOrFail();
-
-        $validated = $request->validate([
-            'trial_target' => ['required', 'in:tenants,subscription'],
-            'product_id' => ['required', 'exists:products,id'],
-            'start_date' => ['required', 'date', 'after_or_equal:today'],
-            'tenant_mode' => ['required', 'in:existing,new'],
-            'tenant_id' => ['nullable', 'exists:tenants,id'],
-            'tenant_name' => ['nullable', 'string', 'max:255'],
-            'tenant_domain' => ['nullable', 'string', 'max:255', 'unique:tenants,domain'],
-            'tenant_address' => ['nullable', 'string', 'max:255'],
-            'tenant_business_type' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $existingTenantIds = $customer->tenants()->pluck('tenants.id');
-
-        if ($validated['tenant_mode'] === 'existing') {
-            $request->validate([
-                'tenant_id' => ['required'],
-            ]);
-
-            if (! $existingTenantIds->contains((int) $validated['tenant_id'])) {
-                return Redirect::route('dashboard')->with('error', 'Selected tenant does not belong to your account.');
-            }
-        }
-
-        if ($validated['tenant_mode'] === 'new') {
-            $request->validate([
-                'tenant_name' => ['required', 'string', 'max:255'],
-                'tenant_domain' => ['required', 'string', 'max:255', 'unique:tenants,domain'],
-            ]);
-        }
-
-        $product = Product::findOrFail($validated['product_id']);
-
-        if ((is_object($product->product_type) ? $product->product_type->value : $product->product_type) !== ProductType::Bundle->value) {
-            return Redirect::route('dashboard')->with('error', 'Only bundle products can be selected for a free trial.');
-        }
-
-        $startDate = Carbon::parse($validated['start_date']);
-
-        $endDate = (clone $startDate)->addMonth()->subDay();
-
-        DB::transaction(function () use ($validated, $customer, $user, $product, $startDate, $endDate) {
-            if ($validated['tenant_mode'] === 'new') {
-                $tenant = Tenant::create([
-                    'code' => 'TEN-' . strtoupper(substr(uniqid(), -6)),
-                    'domain' => $validated['tenant_domain'],
-                    'name' => $validated['tenant_name'],
-                    'address' => $validated['tenant_address'] ?? null,
-                    'business_type' => $validated['tenant_business_type'] ?? null,
-                ]);
-
-                $customer->tenants()->attach($tenant->id, ['role' => 'owner']);
-            } else {
-                $tenant = Tenant::findOrFail($validated['tenant_id']);
-            }
-
-            $subscription = Subscription::create([
-                'tenant_id' => $tenant->id,
-                'agent_id' => null,
-                'promotion_id' => null,
-                'code' => 'SUB-' . strtoupper(substr(uniqid(), -8)),
-                'is_trial' => true,
-                'customer_name' => $user->name,
-                'customer_email' => $user->email,
-                'price_type' => 'per_user',
-                'billing_cycle' => method_exists($product->billing_cycle, 'value') ? $product->billing_cycle->value : 'monthly',
-                'quantity' => 1,
-                'length_of_term' => 1,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'tax_percentage' => 0,
-                'price' => 0,
-                'tax' => 0,
-                'discount_type' => 'percentage',
-                'discount' => 0,
-                'subtotal' => 0,
-                'total' => 0,
-                'agent_commission' => 0,
-                'payment_status' => PaymentStatus::Completed->value,
-                'subscription_status' => SubscriptionStatus::Active->value,
-            ]);
-
-            $subscription->products()->attach($product->id);
-        });
-
-        return Redirect::route('subscriptions.index')->with('success', 'Free trial has been created successfully.');
     }
 }
