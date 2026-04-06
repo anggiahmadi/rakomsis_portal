@@ -16,7 +16,8 @@
             @endif
 
             <!-- Forgot Password Form -->
-            <form method="POST" action="{{ url('password/email') }}" class="bg-white rounded-lg shadow-xl p-8 space-y-6">
+            <form method="POST" action="{{ route('password.email') }}"
+                class="bg-white rounded-lg shadow-xl p-8 space-y-6">
                 @csrf
 
                 <!-- Instructions -->
