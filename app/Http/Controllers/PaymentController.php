@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Models\Payment;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -47,28 +49,39 @@ class PaymentController extends Controller
         // Log the payload for debugging
         \Log::info('Xendit Callback Payload:', $payload);
 
-        // // Validate the payload
-        // if (!isset($payload['id']) || !isset($payload['status']) || !isset($payload['external_id'])) {
-        //     \Log::error('Invalid Xendit callback payload', $payload);
-        //     return response()->json(['message' => 'Invalid payload'], 400);
-        // }
 
-        // // Find the payment by external_id
-        // $payment = Payment::where('external_id', $payload['external_id'])->first();
+        // Validate the payload
+        if (!isset($payload['id']) || !isset($payload['status']) || !isset($payload['external_id'])) {
+            \Log::error('Invalid Xendit callback payload', $payload);
+            return response()->json(['message' => 'Invalid payload'], 400);
+        }
 
-        // if (!$payment) {
-        //     \Log::error('Payment not found for external_id: ' . $payload['external_id']);
-        //     return response()->json(['message' => 'Payment not found'], 404);
-        // }
+        // Find the payment by external_id
 
-        // // Update payment status based on Xendit callback
-        // if ($payload['status'] === 'PAID') {
-        //     $payment->status = 'paid';
-        //     $payment->save();
-        //     \Log::info('Payment marked as paid for external_id: ' . $payload['external_id']);
-        // } else {
-        //     \Log::warning('Unhandled payment status from Xendit: ' . $payload['status']);
-        // }
+        $subscription = Subscription::where('external_id', $payload['external_id'])->first();
+
+        if (!$subscription) {
+            \Log::error('Subscription not found for external_id: ' . $payload['external_id']);
+            return response()->json(['message' => 'Subscription not found'], 404);
+        }
+
+        // Update payment status based on Xendit callback
+        if ($payload['status'] === 'PAID') {
+            $subscription->payments()->create([
+                'amount' => $payload['amount'],
+                'payment_method' => $payload['payment_method'] ?? 'unknown',
+                'status' => PaymentStatus::Completed->value,
+                'transaction_id' => $payload['id'],
+            ]);
+
+            $subscription->update([
+                'payment_status' => PaymentStatus::Completed->value,
+            ]);
+
+            \Log::info('Payment marked as paid for external_id: ' . $payload['external_id']);
+        } else {
+            \Log::warning('Unhandled payment status from Xendit: ' . $payload['status']);
+        }
 
         return response()->json(['message' => 'Callback processed'], 200);
     }
