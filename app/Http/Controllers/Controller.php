@@ -62,8 +62,6 @@ abstract class Controller
 
             $response = json_decode($response);
 
-            dd($response);
-
             $subscription->xendit_invoice_url = $response->invoice_url;
 
             $subscription->payment_status = PaymentStatus::Pending->value;
