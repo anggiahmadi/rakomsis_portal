@@ -89,7 +89,7 @@ class PaymentController extends Controller
 
         // Find the payment by external_id
 
-        $subscription = Subscription::where('external_id', $payload['external_id'])->first();
+        $subscription = Subscription::where('xendit_invoice_url', $payload['external_id'])->first();
 
         if (!$subscription) {
             \Log::error('Subscription not found for external_id: ' . $payload['external_id']);
