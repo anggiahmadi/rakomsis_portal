@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
@@ -100,9 +101,10 @@ class PaymentController extends Controller
         // Update payment status based on Xendit callback
         if ($payload['status'] === 'PAID') {
             $subscription->payments()->create([
+                'payment_purpose' => PaymentPurpose::SubscriptionPayment->value,
                 'amount' => $payload['amount'],
                 'payment_method' => PaymentMethod::Xendit->value,
-                'status' => PaymentStatus::Completed->value,
+                'payment_status' => PaymentStatus::Completed->value,
                 'transaction_id' => $payload['id'],
             ]);
 
