@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
@@ -100,7 +101,7 @@ class PaymentController extends Controller
         if ($payload['status'] === 'PAID') {
             $subscription->payments()->create([
                 'amount' => $payload['amount'],
-                'payment_method' => $payload['payment_method'] ?? 'unknown',
+                'payment_method' => PaymentMethod::Xendit->value,
                 'status' => PaymentStatus::Completed->value,
                 'transaction_id' => $payload['id'],
             ]);
