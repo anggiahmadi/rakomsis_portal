@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
             'employee' => \App\Http\Middleware\EmployeeMiddleware::class,
         ]);
+
+        // Use custom CSRF token middleware to exclude xendit webhook
+        $middleware->replace(
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
