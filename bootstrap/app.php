@@ -18,11 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'employee' => \App\Http\Middleware\EmployeeMiddleware::class,
         ]);
 
-        // Use custom CSRF token middleware to exclude xendit webhook
-        $middleware->replace(
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-        );
+        $middleware->validateCsrfTokens(except: [
+            'api/xendit-payment-callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

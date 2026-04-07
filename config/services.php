@@ -46,5 +46,6 @@ return [
         'secret_key' => env('XENDIT_SECRET_KEY'),
         'success_redirect_url' => env('XENDIT_SUCCESS_REDIRECT_URL'),
         'failure_redirect_url' => env('XENDIT_FAILURE_REDIRECT_URL'),
+        'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
     ],
 ];
