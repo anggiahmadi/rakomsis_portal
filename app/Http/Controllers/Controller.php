@@ -70,7 +70,6 @@ abstract class Controller
 
             return true;
         } else {
-            dd($request->body());
             // write code here to handle failed invoice creation and redirect back to subscription page with error message
             return false;
         }

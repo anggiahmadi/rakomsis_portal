@@ -1024,6 +1024,70 @@
             }
         }
 
+        async function paySubscription(subscriptionId, subscriptionName) {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const detailResponse = await fetch(`{{ url('subscriptions') }}/${subscriptionId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const detailResult = await detailResponse.json();
+
+                if (!detailResponse.ok) {
+                    throw detailResult;
+                }
+
+                const subscription = detailResult.subscription || {};
+                const paymentStatusRaw = normalizeEnumValue(subscription.payment_status);
+                const paymentStatus = String(paymentStatusRaw || '').toLowerCase();
+                const invoiceUrl = subscription.xendit_invoice_url || '';
+
+                if (paymentStatus === 'pending' && invoiceUrl) {
+                    window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+                    return;
+                }
+
+                if (paymentStatus === 'not_paid' || paymentStatus === 'failed') {
+                    const generateResponse = await fetch(`{{ url('api/generate-xendit-invoice') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            subscription_id: subscriptionId,
+                        })
+                    });
+
+                    const generateResult = await generateResponse.json();
+
+                    if (!generateResponse.ok) {
+                        throw generateResult;
+                    }
+
+                    if (generateResult.invoice_url) {
+                        window.open(generateResult.invoice_url, '_blank', 'noopener,noreferrer');
+                        return;
+                    }
+
+                    alert(generateResult.message || 'Invoice generated, but invoice URL is unavailable.');
+                    return;
+                }
+
+                alert(
+                    `Subscription "${subscriptionName}" cannot be paid from this state (${paymentStatusRaw || 'unknown'}).`);
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Failed to process subscription payment.');
+            }
+        }
+
         async function restoreSubscription(subscriptionId, subscriptionName) {
             const confirmed = window.confirm(`Restore subscription "${subscriptionName}"?`);
             if (!confirmed) {

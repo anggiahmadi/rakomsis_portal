@@ -42,6 +42,37 @@ class PaymentController extends Controller
         return view('pages.payment', compact('payments', 'showDeleted'));
     }
 
+    public function generateXenditInvoice(Request $request)
+    {
+        $request->validate([
+            'subscription_id' => 'required|exists:subscriptions,id',
+        ]);
+
+        $subscription = Subscription::findOrFail($request->subscription_id);
+
+        if (! in_array($subscription->payment_status?->value ?? $subscription->payment_status, [PaymentStatus::NotPaid->value, PaymentStatus::Failed->value], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice can only be generated for Not Paid or Failed subscriptions.',
+            ], 422);
+        }
+
+        if (! $this->processingXenditInvoice($subscription)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate Xendit invoice.',
+            ], 500);
+        }
+
+        $subscription->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Xendit invoice generated successfully.',
+            'invoice_url' => $subscription->xendit_invoice_url,
+        ]);
+    }
+
     public function xenditCallback(Request $request)
     {
         $payload = $request->all();
