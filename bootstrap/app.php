@@ -17,10 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
             'employee' => \App\Http\Middleware\EmployeeMiddleware::class,
         ]);
-
-        $middleware->validateCsrfTokens(except: [
-            'api/xendit-payment-callback',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

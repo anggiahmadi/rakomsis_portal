@@ -77,6 +77,12 @@ class PaymentController extends Controller
 
     public function xenditCallback(Request $request)
     {
+        $callbackToken = $request->header('x-callback-token');
+
+        if ($callbackToken !== config('services.xendit.webhook_token')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $payload = $request->all();
 
         // Log the payload for debugging
