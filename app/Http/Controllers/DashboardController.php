@@ -232,6 +232,7 @@ class DashboardController extends Controller
                 'is_trial' => true,
                 'customer_name' => $user->name,
                 'customer_email' => $user->email,
+                'customer_phone' => $user->phone ?? '',
                 'price_type' => 'per_user',
                 'billing_cycle' => method_exists($product->billing_cycle, 'value') ? $product->billing_cycle->value : 'monthly',
                 'quantity' => 1,

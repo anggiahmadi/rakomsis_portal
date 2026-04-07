@@ -47,6 +47,7 @@ class TenantController extends Controller
     public function store(StoreTenantRequest $request)
     {
         $validated = $request->validated();
+        $validated['code'] = $this->generateTenantCode();
 
         $domainPrefix = strtolower(trim((string) $validated['domain']));
         $fullDomain = $domainPrefix . '.rakomsis.com';
@@ -77,6 +78,15 @@ class TenantController extends Controller
             'message' => 'Tenant created successfully.',
             'tenant' => $tenant,
         ], 201);
+    }
+
+    private function generateTenantCode(): string
+    {
+        do {
+            $code = 'TEN-' . strtoupper(substr(uniqid(), -6));
+        } while (Tenant::query()->where('code', $code)->exists());
+
+        return $code;
     }
 
     /**

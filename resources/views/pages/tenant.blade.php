@@ -302,60 +302,58 @@
                 <button onclick="closeModal('tenant-create-modal')" class="text-white hover:text-slate-200">✕</button>
             </div>
 
-            <form id="tenant-create-form" class="p-6 space-y-4">
+            <form id="tenant-create-form" class="p-6 space-y-6">
                 @csrf
-                <div>
-                    <label for="tenant-code" class="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                    <input type="text" id="tenant-code" name="code"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter tenant code" required>
-                    <p id="tenant-code-error" class="mt-1 text-sm text-red-600 hidden"></p>
-                </div>
-
-                <div>
-                    <label for="tenant-name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" id="tenant-name" name="name"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter tenant name" required>
-                    <p id="tenant-name-error" class="mt-1 text-sm text-red-600 hidden"></p>
-                </div>
-
-                <div>
-                    <label for="tenant-domain" class="block text-sm font-medium text-gray-700 mb-1">Domain</label>
-                    <div
-                        class="flex items-center rounded-md shadow-sm border border-gray-300 focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
-                        <input type="text" id="tenant-domain" name="domain"
-                            class="w-full border-0 rounded-l-md px-3 py-2 focus:ring-0" placeholder="your-domain"
-                            autocomplete="off" required>
-                        <span class="px-3 text-sm text-gray-500 border-l border-gray-200">.rakomsis.com</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tenant-code" class="block text-sm font-medium text-gray-700 mb-2">Tenant Code</label>
+                        <input type="text" id="tenant-code" name="code"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:ring-2 focus:ring-[#034c8f] focus:border-transparent outline-none transition"
+                            placeholder="Auto generated" readonly>
+                        <p id="tenant-code-error" class="mt-1 text-sm text-red-600 hidden"></p>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">Preview: <span
-                            id="tenant-domain-preview">your-domain.rakomsis.com</span></p>
-                    <p id="tenant-domain-error" class="mt-1 text-sm text-red-600 hidden"></p>
+
+                    <div>
+                        <label for="tenant-name" class="block text-sm font-medium text-gray-700 mb-2">Tenant Name</label>
+                        <input type="text" id="tenant-name" name="name"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#034c8f] focus:border-transparent outline-none transition"
+                            placeholder="My School / My Business" required>
+                        <p id="tenant-name-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tenant-domain" class="block text-sm font-medium text-gray-700 mb-2">Tenant
+                            Domain</label>
+                        <div
+                            class="flex items-center rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-[#034c8f] focus-within:border-transparent transition">
+                            <input type="text" id="tenant-domain" name="domain"
+                                class="w-full border-0 rounded-l-lg px-4 py-2.5 focus:ring-0" placeholder="your-domain"
+                                autocomplete="off" required>
+                            <span class="px-3 text-sm text-gray-500 border-l border-gray-200 py-2.5">.rakomsis.com</span>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Preview: <span
+                                id="tenant-domain-preview">your-domain.rakomsis.com</span></p>
+                        <p id="tenant-domain-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
+
+                    <div>
+                        <label for="tenant-business-type" class="block text-sm font-medium text-gray-700 mb-2">Business
+                            Type</label>
+                        <input type="text" id="tenant-business-type" name="business_type"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#034c8f] focus:border-transparent outline-none transition"
+                            placeholder="School, Retail, Services, etc.">
+                        <p id="tenant-business-type-error" class="mt-1 text-sm text-red-600 hidden"></p>
+                    </div>
                 </div>
 
                 <div>
-                    <label for="tenant-address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <textarea id="tenant-address" name="address" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter tenant address"></textarea>
+                    <label for="tenant-address" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <input type="text" id="tenant-address" name="address"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#034c8f] focus:border-transparent outline-none transition"
+                        placeholder="Tenant address">
                     <p id="tenant-address-error" class="mt-1 text-sm text-red-600 hidden"></p>
-                </div>
-
-                <div>
-                    <label for="tenant-business-type" class="block text-sm font-medium text-gray-700 mb-1">Business
-                        Type</label>
-                    <select id="tenant-business-type" name="business_type"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Select business type</option>
-                        <option value="education">Education</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="retail">Retail</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="services">Services</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <p id="tenant-business-type-error" class="mt-1 text-sm text-red-600 hidden"></p>
                 </div>
             </form>
 
@@ -446,6 +444,11 @@
     </div>
 
     <script>
+        function generateTenantCode() {
+            const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+            return `TEN-${randomPart.padEnd(6, '0').slice(0, 6)}`;
+        }
+
         function setTenantViewTab(tab) {
             const detailsTab = document.getElementById('tenant-view-details-tab');
             const relatedTab = document.getElementById('tenant-view-customer-related-tab');
@@ -477,6 +480,10 @@
         function openNewTenantModal() {
             document.getElementById('tenant-create-form').reset();
             clearTenantCreateErrors();
+            const codeInput = document.getElementById('tenant-code');
+            if (codeInput) {
+                codeInput.value = generateTenantCode();
+            }
             updateTenantDomainPreview();
             document.getElementById('tenant-create-modal').classList.remove('hidden');
         }
@@ -495,6 +502,10 @@
         function resetCreateTenantForm() {
             document.getElementById('tenant-create-form').reset();
             clearTenantCreateErrors();
+            const codeInput = document.getElementById('tenant-code');
+            if (codeInput) {
+                codeInput.value = generateTenantCode();
+            }
             updateTenantDomainPreview();
         }
 

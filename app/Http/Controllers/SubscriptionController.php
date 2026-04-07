@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PaymentStatus;
 use App\Enums\ProductType;
 use App\Enums\SubscriptionStatus;
-use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -133,6 +132,7 @@ class SubscriptionController extends Controller
             ]);
 
         $renewSubscription = null;
+
         $renewFromId = (int) $request->query('renew_from', 0);
 
         if ($renewFromId > 0) {
@@ -155,13 +155,68 @@ class SubscriptionController extends Controller
             }
         }
 
+        $customerPhone = Auth::user()->phone ?? '';
+
         return view('pages.subscription.form', compact(
             'isEmployee',
             'availableTenants',
             'availableProducts',
             'availablePromotions',
-            'renewSubscription'
+            'renewSubscription',
+            'customerPhone'
         ));
+    }
+
+    /**
+     * Store a new subscription from modal form.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'tenant_id' => ['required', 'exists:tenants,id'],
+            'product_ids' => ['required', 'array', 'min:1'],
+            'product_ids.*' => ['exists:products,id'],
+            'price_type' => ['required', 'in:per_user,per_location'],
+            'billing_cycle' => ['required', 'in:monthly,yearly'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'length_of_term' => ['required', 'integer', 'min:1'],
+            'start_date' => ['required', 'date'],
+            'reference_code' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:20'],
+        ]);
+
+        if (! $this->userCanAccessTenant((int) $validated['tenant_id'])) {
+            return Redirect::back()->withInput()->withErrors([
+                'tenant_id' => 'Selected tenant does not belong to your account.',
+            ]);
+        }
+
+        DB::beginTransaction();
+
+        Auth::user()->update([
+            'phone' => $validated['customer_phone'],
+        ]);
+
+        $createdSubscription = $this->createSubscriptionFromRequest(
+            $validated,
+            (int) $validated['tenant_id'],
+            null,
+            null
+        );
+
+        if ($this->processingXenditInvoice($createdSubscription)) {
+            DB::commit();
+            // open the invoice URL in a new tab
+            echo "<script>window.open('{$createdSubscription->xendit_invoice_url}', '_blank');</script>";
+
+            return Redirect::route('subscriptions.index')
+                ->with('success', 'Subscription created successfully. Code: ' . $createdSubscription->code);
+        } else {
+            DB::rollBack();
+
+            return Redirect::route('subscriptions.index')
+                ->with('error', 'Failed to create Xendit invoice for the subscription.');
+        }
     }
 
     /**
@@ -226,40 +281,6 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Store a new subscription from modal form.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'tenant_id' => ['required', 'exists:tenants,id'],
-            'product_ids' => ['required', 'array', 'min:1'],
-            'product_ids.*' => ['exists:products,id'],
-            'price_type' => ['required', 'in:per_user,per_location'],
-            'billing_cycle' => ['required', 'in:monthly,yearly'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'length_of_term' => ['required', 'integer', 'min:1'],
-            'start_date' => ['required', 'date'],
-            'reference_code' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        if (! $this->userCanAccessTenant((int) $validated['tenant_id'])) {
-            return Redirect::back()->withInput()->withErrors([
-                'tenant_id' => 'Selected tenant does not belong to your account.',
-            ]);
-        }
-
-        $createdSubscription = $this->createSubscriptionFromRequest(
-            $validated,
-            (int) $validated['tenant_id'],
-            null,
-            null
-        );
-
-        return Redirect::route('subscriptions.index')
-            ->with('success', 'Subscription created successfully. Code: ' . $createdSubscription->code);
-    }
-
-    /**
      * Create a new renewal subscription from an existing subscription.
      */
     public function renew(Request $request, Subscription $subscription)
@@ -281,6 +302,8 @@ class SubscriptionController extends Controller
             }
         }
 
+        DB::beginTransaction();
+
         $validated = $request->validate([
             'tenant_id' => ['required', 'exists:tenants,id'],
             'product_ids' => ['required', 'array', 'min:1'],
@@ -291,6 +314,7 @@ class SubscriptionController extends Controller
             'length_of_term' => ['required', 'integer', 'min:1'],
             'start_date' => ['required', 'date'],
             'reference_code' => ['nullable', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:20'],
         ]);
 
         if (! $this->userCanAccessTenant((int) $validated['tenant_id'])) {
@@ -306,8 +330,19 @@ class SubscriptionController extends Controller
             false
         );
 
-        return Redirect::route('subscriptions.index')
-            ->with('success', 'Subscription renewed successfully. New code: ' . $renewedSubscription->code);
+        if ($this->processingXenditInvoice($renewedSubscription)) {
+            DB::commit();
+
+            echo "<script>window.open('{$renewedSubscription->xendit_invoice_url}', '_blank');</script>";
+
+            return Redirect::route('subscriptions.index')
+                ->with('success', 'Subscription renewed successfully. New code: ' . $renewedSubscription->code);
+        } else {
+            DB::rollBack();
+
+            return Redirect::route('subscriptions.index')
+                ->with('error', 'Failed to create Xendit invoice for the renewed subscription.');
+        }
     }
 
     /**
@@ -328,7 +363,9 @@ class SubscriptionController extends Controller
     private function createSubscriptionFromRequest(array $validated, int $tenantId, ?int $agentId = null, ?bool $isTrial = false): Subscription
     {
         $user = Auth::user();
+
         $startDate = Carbon::parse($validated['start_date']);
+
         $endDate = (clone $startDate);
 
         if ($validated['billing_cycle'] === 'yearly') {
@@ -418,12 +455,14 @@ class SubscriptionController extends Controller
                 'is_trial' => (bool) ($isTrial ?? false),
                 'customer_name' => $user->name,
                 'customer_email' => $user->email,
+                'customer_phone' => $user->phone ?? '',
                 'price_type' => $validated['price_type'],
                 'billing_cycle' => $validated['billing_cycle'],
                 'quantity' => $quantity,
                 'length_of_term' => $lengthOfTerm,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
+                'currency_code' => 'IDR',
                 'tax_percentage' => 0,
                 'price' => $unitPrice,
                 'tax' => $tax,

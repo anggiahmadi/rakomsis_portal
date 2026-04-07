@@ -23,6 +23,7 @@ class Subscription extends Model
         'is_trial',
         'customer_name',
         'customer_email',
+        'customer_phone',
         'price_type',
         'billing_cycle',
         'quantity',
@@ -38,7 +39,8 @@ class Subscription extends Model
         'total',
         'agent_commission',
         'payment_status',
-        'subscription_status'
+        'subscription_status',
+        'xendit_invoice_url'
     ];
 
     protected $casts = [

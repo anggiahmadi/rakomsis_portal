@@ -40,51 +40,36 @@ class PaymentController extends Controller
         return view('pages.payment', compact('payments', 'showDeleted'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function xenditCallback(Request $request)
     {
-        //
-    }
+        $payload = $request->all();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StorePaymentRequest $request)
-    {
-        //
-    }
+        // Log the payload for debugging
+        \Log::info('Xendit Callback Payload:', $payload);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Payment $payment)
-    {
-        //
-    }
+        // // Validate the payload
+        // if (!isset($payload['id']) || !isset($payload['status']) || !isset($payload['external_id'])) {
+        //     \Log::error('Invalid Xendit callback payload', $payload);
+        //     return response()->json(['message' => 'Invalid payload'], 400);
+        // }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Payment $payment)
-    {
-        //
-    }
+        // // Find the payment by external_id
+        // $payment = Payment::where('external_id', $payload['external_id'])->first();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdatePaymentRequest $request, Payment $payment)
-    {
-        //
-    }
+        // if (!$payment) {
+        //     \Log::error('Payment not found for external_id: ' . $payload['external_id']);
+        //     return response()->json(['message' => 'Payment not found'], 404);
+        // }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Payment $payment)
-    {
-        //
+        // // Update payment status based on Xendit callback
+        // if ($payload['status'] === 'PAID') {
+        //     $payment->status = 'paid';
+        //     $payment->save();
+        //     \Log::info('Payment marked as paid for external_id: ' . $payload['external_id']);
+        // } else {
+        //     \Log::warning('Unhandled payment status from Xendit: ' . $payload['status']);
+        // }
+
+        return response()->json(['message' => 'Callback processed'], 200);
     }
 }

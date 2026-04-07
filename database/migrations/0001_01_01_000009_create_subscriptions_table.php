@@ -25,12 +25,14 @@ return new class extends Migration
             $table->boolean('is_trial')->default(false); // Indicates if the subscription is a trial
             $table->string('customer_name'); // Name of the customer subscribing
             $table->string('customer_email'); // Email of the customer subscribing
+            $table->string('customer_phone'); // Phone number of the customer subscribing
             $table->string('price_type')->default('per_user'); // per_location or per_user
             $table->string('billing_cycle')->default('monthly'); // monthly, yearly, etc.
             $table->integer('quantity')->default(1); // Number of users or locations subscribed
             $table->integer('length_of_term')->default(1); // Length of the subscription term in billing cycles
             $table->date('start_date'); // Start date of the subscription
             $table->date('end_date'); // End date of the subscription
+            $table->char('currency_code', 3)->default('IDR'); // Currency code for the subscription
             $table->double('tax_percentage')->default(0); // Tax percentage applied to the product
             $table->double('price')->default(0); // Price at the time of subscription
             $table->double('tax')->default(0); // Tax applied to the subscription
@@ -41,6 +43,7 @@ return new class extends Migration
             $table->double('agent_commission')->default(0); // Commission earned by the agent for this subscription (commission_rate * subtotal)
             $table->string('payment_status')->default('not_paid'); // not_paid, pending, paid, failed, etc.
             $table->string('subscription_status')->default('active'); // active, cancelled, and expired.
+            $table->string('xendit_invoice_url')->nullable(); // Store the Xendit invoice ID for reference
             $table->timestamps();
             $table->softDeletes();
         });

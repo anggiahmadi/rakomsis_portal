@@ -40,6 +40,7 @@ Route::get('register', function () {
 Route::post('google-login', [UserController::class, 'googleLogin'])->name('google.login');
 Route::post('login', [UserController::class, 'login'])->name('login');
 Route::post('register', [UserController::class, 'register'])->name('register');
+Route::post('xendit-payment-callback', [PaymentController::class, 'xenditCallback'])->name('xendit.callback');
 
 Route::middleware('auth')->group(function () {
 
