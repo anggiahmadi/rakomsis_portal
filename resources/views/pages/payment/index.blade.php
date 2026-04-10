@@ -69,7 +69,7 @@
                                         <div class="flex space-x-2">
                                             @if ($payment->trashed())
                                                 <button type="button"
-                                                    onclick="restorePayment({{ $payment->id }}, @js($payment->user->name))"
+                                                    onclick="restorePayment({{ $payment->id }}, @js($payment->code))"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -81,7 +81,7 @@
                                                     Restore
                                                 </button>
                                                 <button type="button"
-                                                    onclick="permanentDeletePayment({{ $payment->id }}, @js($payment->user->name))"
+                                                    onclick="permanentDeletePayment({{ $payment->id }}, @js($payment->code))"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -107,7 +107,7 @@
                                                     View
                                                 </button>
                                                 <button type="button"
-                                                    onclick="deletePayment({{ $payment->id }}, @js($payment->user->name))"
+                                                    onclick="deletePayment({{ $payment->id }}, @js($payment->code))"
                                                     class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -126,8 +126,8 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <div class="max-w-xs truncate {{ $payment->trashed() ? 'line-through text-gray-400' : '' }}"
-                                            title="{{ $payment->user->name }}">
-                                            {{ $payment->user->name }}
+                                            title="{{ $payment->code }}">
+                                            {{ $payment->code }}
                                         </div>
                                         @if ($payment->trashed())
                                             <span

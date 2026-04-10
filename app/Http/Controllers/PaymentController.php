@@ -41,7 +41,7 @@ class PaymentController extends Controller
 
         $payments = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        return view('pages.payment', compact('payments', 'showDeleted'));
+        return view('pages.payment.index', compact('payments', 'showDeleted'));
     }
 
     public function generateXenditInvoice(Request $request)
@@ -117,6 +117,8 @@ class PaymentController extends Controller
             $subscription->update([
                 'payment_status' => PaymentStatus::Completed->value,
             ]);
+
+            // HIT Services to server to generate web apps
 
             \Log::info('Payment marked as paid for external_id: ' . $payload['external_id']);
         } else {

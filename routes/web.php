@@ -41,6 +41,10 @@ Route::post('google-login', [UserController::class, 'googleLogin'])->name('googl
 Route::post('login', [UserController::class, 'login'])->name('login');
 Route::post('register', [UserController::class, 'register'])->name('register');
 
+// Payment gateway redirect landing pages
+Route::view('payment/success', 'pages.payment.success')->name('payment.success');
+Route::view('payment/failed', 'pages.payment.failed')->name('payment.failed');
+
 Route::middleware('auth')->group(function () {
 
     // Agent Routes - Protected by agent middleware
