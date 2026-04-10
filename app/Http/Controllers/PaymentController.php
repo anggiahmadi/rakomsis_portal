@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PaymentCompleted;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
@@ -11,6 +12,8 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -85,44 +88,74 @@ class PaymentController extends Controller
 
         $payload = $request->all();
 
-        // Log the payload for debugging
-        \Log::info('Xendit Callback Payload:', $payload);
+        Log::info('Xendit callback payload received.', $payload);
 
 
-        // Validate the payload
-        if (!isset($payload['id']) || !isset($payload['status']) || !isset($payload['external_id'])) {
-            \Log::error('Invalid Xendit callback payload', $payload);
+        if (! isset($payload['id'], $payload['status'], $payload['external_id'])) {
+            Log::error('Invalid Xendit callback payload.', $payload);
             return response()->json(['message' => 'Invalid payload'], 400);
         }
 
-        // Find the payment by external_id
-
         $subscription = Subscription::where('code', $payload['external_id'])->first();
 
-        if (!$subscription) {
-            \Log::error('Subscription not found for external_id: ' . $payload['external_id']);
+        if (! $subscription) {
+            Log::error('Subscription not found for Xendit external_id.', [
+                'external_id' => $payload['external_id'],
+            ]);
             return response()->json(['message' => 'Subscription not found'], 404);
         }
 
-        // Update payment status based on Xendit callback
         if ($payload['status'] === 'PAID') {
-            $subscription->payments()->create([
-                'payment_purpose' => PaymentPurpose::SubscriptionPayment->value,
-                'amount' => $payload['amount'],
-                'payment_method' => PaymentMethod::Xendit->value,
-                'payment_status' => PaymentStatus::Completed->value,
+            $shouldDispatchProvisioning = false;
+            $subscriptionId = $subscription->getKey();
+
+            DB::transaction(function () use ($payload, $subscriptionId, &$shouldDispatchProvisioning) {
+                $lockedSubscription = Subscription::query()
+                    ->with('tenant')
+                    ->lockForUpdate()
+                    ->findOrFail($subscriptionId);
+
+                $currentStatus = $lockedSubscription->payment_status?->value ?? $lockedSubscription->payment_status;
+
+                Payment::query()->firstOrCreate(
+                    [
+                        'transaction_id' => $payload['id'],
+                    ],
+                    [
+                        'subscription_id' => $lockedSubscription->getKey(),
+                        'payment_purpose' => PaymentPurpose::SubscriptionPayment->value,
+                        'amount' => (float) ($payload['amount'] ?? $lockedSubscription->total),
+                        'payment_method' => PaymentMethod::Xendit->value,
+                        'payment_status' => PaymentStatus::Completed->value,
+                    ]
+                );
+
+                if ($currentStatus !== PaymentStatus::Completed->value) {
+                    $lockedSubscription->forceFill([
+                        'payment_status' => PaymentStatus::Completed->value,
+                    ])->save();
+
+                    $shouldDispatchProvisioning = true;
+                }
+            });
+
+            if ($shouldDispatchProvisioning) {
+                event(new PaymentCompleted(
+                    Subscription::with('tenant')->findOrFail($subscriptionId)
+                ));
+            }
+
+            Log::info('Subscription payment marked as completed.', [
+                'subscription_id' => $subscriptionId,
+                'external_id' => $payload['external_id'],
                 'transaction_id' => $payload['id'],
+                'provisioning_dispatched' => $shouldDispatchProvisioning,
             ]);
-
-            $subscription->update([
-                'payment_status' => PaymentStatus::Completed->value,
-            ]);
-
-            // HIT Services to server to generate web apps
-
-            \Log::info('Payment marked as paid for external_id: ' . $payload['external_id']);
         } else {
-            \Log::warning('Unhandled payment status from Xendit: ' . $payload['status']);
+            Log::warning('Unhandled Xendit payment status.', [
+                'external_id' => $payload['external_id'],
+                'status' => $payload['status'],
+            ]);
         }
 
         return response()->json(['message' => 'Callback processed'], 200);

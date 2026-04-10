@@ -206,11 +206,12 @@ class SubscriptionController extends Controller
 
         if ($this->processingXenditInvoice($createdSubscription)) {
             DB::commit();
-            // open the invoice URL in a new tab
-            echo "<script>window.open('{$createdSubscription->xendit_invoice_url}', '_blank');</script>";
 
-            return Redirect::route('subscriptions.index')
-                ->with('success', 'Subscription created successfully. Code: ' . $createdSubscription->code);
+            return $this->responseWithInvoiceRedirect(
+                (string) $createdSubscription->xendit_invoice_url,
+                'Subscription created successfully. Code: ' . $createdSubscription->code,
+                route('subscriptions.index')
+            );
         } else {
             DB::rollBack();
 
@@ -333,10 +334,11 @@ class SubscriptionController extends Controller
         if ($this->processingXenditInvoice($renewedSubscription)) {
             DB::commit();
 
-            echo "<script>window.open('{$renewedSubscription->xendit_invoice_url}', '_blank');</script>";
-
-            return Redirect::route('subscriptions.index')
-                ->with('success', 'Subscription renewed successfully. New code: ' . $renewedSubscription->code);
+            return $this->responseWithInvoiceRedirect(
+                (string) $renewedSubscription->xendit_invoice_url,
+                'Subscription renewed successfully. New code: ' . $renewedSubscription->code,
+                route('subscriptions.index')
+            );
         } else {
             DB::rollBack();
 
