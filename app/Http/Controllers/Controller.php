@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
 use Illuminate\Support\Facades\Http;
+use Illuminate\View\View;
 
 abstract class Controller
 {
@@ -73,5 +74,16 @@ abstract class Controller
             // write code here to handle failed invoice creation and redirect back to subscription page with error message
             return false;
         }
+    }
+
+    protected function responseWithInvoiceRedirect(string $invoiceUrl, string $successMessage, string $redirectUrl): View
+    {
+        session()->flash('success', $successMessage);
+
+        return view('pages.subscription.invoice-redirect', [
+            'invoiceUrl' => $invoiceUrl,
+            'redirectUrl' => $redirectUrl,
+            'successMessage' => $successMessage,
+        ]);
     }
 }

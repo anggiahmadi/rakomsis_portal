@@ -524,9 +524,21 @@
                         <dt class="font-semibold">Business Type</dt>
                         <dd id="subscription-view-tenant-business-type">-</dd>
                     </div>
+                    <div>
+                        <dt class="font-semibold">Provisioning Status</dt>
+                        <dd id="subscription-view-tenant-provisioning-status">-</dd>
+                    </div>
+                    <div>
+                        <dt class="font-semibold">Frontend Path</dt>
+                        <dd id="subscription-view-tenant-frontend-path">-</dd>
+                    </div>
                     <div class="sm:col-span-2">
                         <dt class="font-semibold">Address</dt>
                         <dd id="subscription-view-tenant-address">-</dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="font-semibold">Provisioning Error</dt>
+                        <dd id="subscription-view-tenant-provisioning-error">-</dd>
                     </div>
                 </dl>
             </div>
@@ -900,7 +912,12 @@
             document.getElementById('subscription-view-tenant-code').textContent = tenant.code || '-';
             document.getElementById('subscription-view-tenant-domain').textContent = tenant.domain || '-';
             document.getElementById('subscription-view-tenant-business-type').textContent = tenant.business_type || '-';
+            document.getElementById('subscription-view-tenant-provisioning-status').textContent = formatStatus(tenant
+                .provisioning_status);
+            document.getElementById('subscription-view-tenant-frontend-path').textContent = tenant.frontend_path || '-';
             document.getElementById('subscription-view-tenant-address').textContent = tenant.address || '-';
+            document.getElementById('subscription-view-tenant-provisioning-error').textContent = tenant
+                .provisioning_error || '-';
 
             openSubscriptionViewModal();
         }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProvisioningStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,6 +18,19 @@ class Tenant extends Model
         'name',
         'address',
         'business_type',
+        'provisioning_status',
+        'provisioned_at',
+        'provisioning_error',
+        'cloudflare_record_id',
+        'frontend_path',
+        'provisioning_attempts',
+        'last_provisioned_subscription_id',
+    ];
+
+    protected $casts = [
+        'provisioning_status' => ProvisioningStatus::class,
+        'provisioned_at' => 'datetime',
+        'provisioning_attempts' => 'integer',
     ];
 
     public function isOwner(Customer $customer)
@@ -37,6 +51,11 @@ class Tenant extends Model
     public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function lastProvisionedSubscription(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'last_provisioned_subscription_id');
     }
 
     public function activeSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
