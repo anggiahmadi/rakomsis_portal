@@ -264,5 +264,150 @@ Unit test:
 - `php artisan make:job ProvisionTenantInfrastructureJob --no-interaction`
 - `php artisan make:test --pest PaymentProvisioningFlowTest --no-interaction`
 
+## Langkah Menjalankan di Server
+Urutan minimum agar provisioning bisa dicoba di server:
+
+1. Pull code terbaru ke server.
+2. Install dependency Laravel jika `vendor/` belum ada.
+3. Isi `.env` dengan konfigurasi Cloudflare, frontend tenant, dan Nginx.
+4. Jalankan migration.
+5. Clear dan cache ulang konfigurasi.
+6. Pastikan queue worker aktif.
+7. Lakukan test payment callback sampai status `completed`.
+8. Verifikasi DNS, folder tenant, `.env`, config Nginx, symlink, dan hasil `nginx -t`.
+
+### 1. Install Dependency
+```bash
+cd /path/ke/rakomsis_portal
+composer install --no-dev --optimize-autoloader
+```
+
+### 2. Isi Environment Variables
+Contoh nilai minimum yang perlu disiapkan di server:
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+QUEUE_CONNECTION=database
+
+CF_API_TOKEN=
+CF_ZONE_ID=
+CF_PROXIED=true
+TENANT_DNS_RECORD_TYPE=A
+TENANT_DNS_TARGET=
+TENANT_DNS_TTL=1
+
+TENANT_FRONTEND_BASE_PATH=/var/www/html/rakomsis_v_4_0/front_end
+TENANT_FRONTEND_TEMPLATE_PATH=/var/www/html/rakomsis_v_4_0/front_end/rakomsis_4_0_vue
+TENANT_FRONTEND_API_URL=https://apps-gateway.rakomsis.com
+TENANT_FRONTEND_FILE_URL=https://apps-file.rakomsis.com
+TENANT_FRONTEND_RUN_BUILD=true
+TENANT_FRONTEND_INSTALL_COMMAND="npm install --no-fund --no-audit"
+TENANT_FRONTEND_BUILD_COMMAND="npm run build"
+
+TENANT_NGINX_SITES_AVAILABLE=/etc/nginx/sites-available
+TENANT_NGINX_SITES_ENABLED=/etc/nginx/sites-enabled
+TENANT_NGINX_SSL_CERT=/etc/ssl/certs/rakomsis.crt
+TENANT_NGINX_SSL_KEY=/etc/ssl/private/rakomsis.key
+TENANT_NGINX_PHP_FPM_SOCKET=/var/run/php/php8.3-fpm.sock
+TENANT_NGINX_SECURITY_INCLUDE=nginxconfig.io/security.conf
+TENANT_NGINX_GENERAL_INCLUDE=nginxconfig.io/general.conf
+TENANT_NGINX_TEST_COMMAND="nginx -t"
+TENANT_NGINX_RELOAD_COMMAND="systemctl reload nginx"
+```
+
+Catatan:
+- `TENANT_DNS_TARGET` wajib diisi. Jika memakai record `A`, isi dengan IP public server tujuan.
+- `TENANT_SERVER_API_URL` dan `TENANT_SERVER_API_TOKEN` tidak dipakai pada implementasi direct provisioning saat ini.
+- Jika frontend tidak boleh build langsung di server ini, set `TENANT_FRONTEND_RUN_BUILD=false`.
+
+### 3. Clear Cache dan Jalankan Migration
+```bash
+cd /path/ke/rakomsis_portal
+php artisan optimize:clear
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 4. Jalankan Queue Worker
+Provisioning dijalankan melalui queue, jadi worker wajib aktif:
+
+```bash
+cd /path/ke/rakomsis_portal
+php artisan queue:work database --tries=3 --timeout=3600 -v
+```
+
+Opsional untuk melihat log:
+
+```bash
+cd /path/ke/rakomsis_portal
+tail -f storage/logs/laravel.log
+```
+
+### 5. Test Payment Callback
+Setelah subscription dibuat dan invoice Xendit tersedia, selesaikan pembayaran seperti biasa atau kirim callback test ke endpoint:
+
+`POST /api/xendit-payment-callback`
+
+Contoh test manual:
+
+```bash
+curl -X POST https://domain-portal-kamu/api/xendit-payment-callback \
+  -H "Content-Type: application/json" \
+  -H "x-callback-token: ISI_XENDIT_WEBHOOK_TOKEN" \
+  -d '{
+    "id": "test-paid-001",
+    "status": "PAID",
+    "external_id": "KODE_SUBSCRIPTION",
+    "amount": 100000
+  }'
+```
+
+Catatan:
+- `external_id` harus sama dengan `subscriptions.code`.
+- `x-callback-token` harus sama dengan `XENDIT_WEBHOOK_TOKEN`.
+
+### 6. Verifikasi Hasil Provisioning
+Setelah callback `PAID` masuk dan queue berhasil menjalankan job, verifikasi:
+
+```bash
+ls -la /var/www/html/rakomsis_v_4_0/front_end
+ls -la /etc/nginx/sites-available | grep new_
+ls -la /etc/nginx/sites-enabled | grep new_
+nginx -t
+```
+
+Jika domain tenant misalnya `trial-servio.rakomsis.com`, cek juga:
+
+```bash
+cat /var/www/html/rakomsis_v_4_0/front_end/trial_servio/.env
+cat /etc/nginx/sites-available/new_trial-servio.rakomsis.com
+```
+
+Yang harus terlihat:
+- DNS record tenant sudah ada di Cloudflare.
+- Folder tenant sudah terbentuk.
+- File `.env` tenant sudah berisi `VITE_APP_TENANT_CODE`, `VITE_APP_API_URL`, dan `VITE_APP_FILE_URL`.
+- Config Nginx `new_<domain>` sudah ada di `sites-available`.
+- Symlink ke `sites-enabled` sudah ada.
+- `nginx -t` sukses.
+
+### 7. Permission Server yang Wajib Ada
+User yang menjalankan PHP/queue worker harus bisa:
+- write ke `/var/www/html/rakomsis_v_4_0/front_end`
+- write ke `/etc/nginx/sites-available`
+- membuat symlink ke `/etc/nginx/sites-enabled`
+- menjalankan `nginx -t`
+- reload Nginx
+
+Quick check:
+
+```bash
+sudo -u www-data test -w /var/www/html/rakomsis_v_4_0/front_end && echo OK_FRONTEND
+sudo -u www-data test -w /etc/nginx/sites-available && echo OK_NGINX
+```
+
 ---
-Status: Draft revisi siap dijadikan acuan implementasi.
+Status: Implementasi awal tersedia, perlu setup env, dependency, migration, dan queue worker di server.
